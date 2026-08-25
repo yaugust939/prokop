@@ -17,10 +17,10 @@ SRC = Path(__file__).resolve().parent
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from agent_core.loop.turn import AgentTurn
-from agent_core.providers.registry import ProviderRegistry
-from agent_core.tools.registry import ToolRegistry, register
-from agent_core.transport.http_transport import ChatCompletionsTransport
+from prokop.loop.turn import AgentTurn
+from prokop.providers.registry import ProviderRegistry
+from prokop.tools.registry import ToolRegistry, register
+from prokop.transport.http_transport import ChatCompletionsTransport
 
 DEFAULT_MODEL = "deepseek-chat"
 

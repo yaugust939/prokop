@@ -1,4 +1,4 @@
-# Чистая установка prokop (agent_core) из опубликованного GitHub-репозитория.
+# Чистая установка prokop из опубликованного GitHub-репозитория.
 # Сборка ставит пакет с нуля и прогоняет тесты как проверку установки.
 FROM python:3.13-slim
 
@@ -20,4 +20,4 @@ RUN pip install --no-cache-dir -e src \
 RUN python -m pytest src/tests -q
 
 # По умолчанию — сообщить установленную версию
-CMD ["python", "-c", "import agent_core; print('agent_core', agent_core.__version__)"]
+CMD ["python", "-c", "import prokop; print('prokop', prokop.__version__)"]

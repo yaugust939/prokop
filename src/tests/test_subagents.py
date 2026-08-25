@@ -8,30 +8,30 @@ import threading
 
 import pytest
 
-from agent_core.subagents.budget import IterationBudget
-from agent_core.subagents.config import SubagentsConfig
-from agent_core.subagents.engine import DelegationEngine, consolidate_batch_results
-from agent_core.subagents.isolation import (
+from prokop.subagents.budget import IterationBudget
+from prokop.subagents.config import SubagentsConfig
+from prokop.subagents.engine import DelegationEngine, consolidate_batch_results
+from prokop.subagents.isolation import (
     BLOCKED_TOOL_NAMES,
     build_child_system_prompt,
     filter_child_tools,
 )
-from agent_core.subagents.model import (
+from prokop.subagents.model import (
     SubagentRecord,
     SubagentResult,
     SubagentStatus,
     new_subagent_id,
 )
-from agent_core.subagents.queue import CompletionQueue
-from agent_core.subagents.registry import RegistrySaturatedError, SubagentRegistry
-from agent_core.subagents.roles import (
+from prokop.subagents.queue import CompletionQueue
+from prokop.subagents.registry import RegistrySaturatedError, SubagentRegistry
+from prokop.subagents.roles import (
     DepthError,
     Role,
     normalize_max_depth,
     resolve_role,
     validate_depth,
 )
-from agent_core.subagents.tool import (
+from prokop.subagents.tool import (
     DELEGATION_TOOL_NAME,
     build_delegation_handler,
     delegation_tool_schema,

@@ -6,17 +6,17 @@ import asyncio
 
 import pytest
 
-from agent_core.loop.messages import Message, clone_messages, fix_role_alternation, to_api_messages
-from agent_core.loop.budgets import Budgets, WIND_DOWN_NOTE
-from agent_core.loop.control import TurnControl
-from agent_core.loop.compressor import compress_context, plan_compression, is_summary, SUMMARY_PREFIX
-from agent_core.loop.errors import classify_error, ErrorKind, retry_transient
-from agent_core.loop.lease import SessionLease, LeaseLostError
-from agent_core.loop.system_prompt import build_system_prompt, is_stale, prompt_hash
-from agent_core.loop.turn import AgentTurn
-from agent_core.store.sessions import SessionStore
-from agent_core.transport.base import ModelResponse, ModelTransport, TransportConfig
-from agent_core.providers.profile import ProviderProfile
+from prokop.loop.messages import Message, clone_messages, fix_role_alternation, to_api_messages
+from prokop.loop.budgets import Budgets, WIND_DOWN_NOTE
+from prokop.loop.control import TurnControl
+from prokop.loop.compressor import compress_context, plan_compression, is_summary, SUMMARY_PREFIX
+from prokop.loop.errors import classify_error, ErrorKind, retry_transient
+from prokop.loop.lease import SessionLease, LeaseLostError
+from prokop.loop.system_prompt import build_system_prompt, is_stale, prompt_hash
+from prokop.loop.turn import AgentTurn
+from prokop.store.sessions import SessionStore
+from prokop.transport.base import ModelResponse, ModelTransport, TransportConfig
+from prokop.providers.profile import ProviderProfile
 
 
 class FakeTransport(ModelTransport):
@@ -176,7 +176,7 @@ def test_turn_executes_tools_then_final_answer():
         ),
         ModelResponse(content="финальный ответ"),
     ]
-    from agent_core.tools.registry import ToolRegistry, register
+    from prokop.tools.registry import ToolRegistry, register
     import json
 
     registry = ToolRegistry()

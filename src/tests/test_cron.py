@@ -7,16 +7,16 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from agent_core.cron.model import Job, JobError, validate_job, new_job_id
-from agent_core.cron.schedule import (
+from prokop.cron.model import Job, JobError, validate_job, new_job_id
+from prokop.cron.schedule import (
     ScheduleKind,
     ScheduleError,
     parse_schedule,
     next_run,
 )
-from agent_core.cron.store import JobStore
-from agent_core.cron.ticker import Ticker, add_job, GRACE_SECONDS
-from agent_core.cron.delivery import resolve_delivery, LocalDelivery, DeliveryError
+from prokop.cron.store import JobStore
+from prokop.cron.ticker import Ticker, add_job, GRACE_SECONDS
+from prokop.cron.delivery import resolve_delivery, LocalDelivery, DeliveryError
 
 
 # --- модель и валидация ---------------------------------------------------
