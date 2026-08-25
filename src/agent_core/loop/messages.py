@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from dataclasses import dataclass, field, asdict
 from typing import Any, Optional
 
@@ -40,7 +41,19 @@ class Message:
         else:
             payload["content"] = ""
         if self.tool_calls:
-            payload["tool_calls"] = copy.deepcopy(self.tool_calls)
+            payload["tool_calls"] = [
+                {
+                    "id": tc.get("id") or "",
+                    "type": "function",
+                    "function": {
+                        "name": tc.get("name") or "",
+                        "arguments": tc.get("arguments")
+                        if isinstance(tc.get("arguments"), str)
+                        else json.dumps(tc.get("arguments") or {}, ensure_ascii=False),
+                    },
+                }
+                for tc in self.tool_calls
+            ]
         if self.role == "tool":
             payload["tool_call_id"] = self.tool_call_id or ""
             if self.tool_name:

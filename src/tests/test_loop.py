@@ -52,6 +52,23 @@ def test_reasoning_not_serialized_into_api():
     assert "reasoning" not in api[0]
 
 
+def test_tool_calls_serialized_in_openai_format():
+    messages = [
+        Message(
+            role="assistant",
+            content=None,
+            tool_calls=[{"id": "c1", "name": "multiply", "arguments": {"a": 17, "b": 23}}],
+        )
+    ]
+    api = to_api_messages(messages)
+    tc = api[0]["tool_calls"][0]
+    assert tc["id"] == "c1"
+    assert tc["type"] == "function"
+    assert tc["function"]["name"] == "multiply"
+    # arguments уходит в API как JSON-строка, а не как объект
+    assert tc["function"]["arguments"] == '{"a": 17, "b": 23}'
+
+
 def test_thinking_only_dropped():
     messages = [
         Message(role="user", content="вопрос"),
