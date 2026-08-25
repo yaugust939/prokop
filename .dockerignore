@@ -1,0 +1,10 @@
+# Источник берётся клоном из GitHub, локальный контекст не нужен —
+# исключаем всё тяжёлое и локальное.
+reference/
+.git/
+.github/
+src/.env
+src/.pytest_cache/
+*.egg-info/
+__pycache__/
+*.py[cod]
