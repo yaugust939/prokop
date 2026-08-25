@@ -1,5 +1,8 @@
 # prokop — универсальное ядро агента (clean room)
 
+[![tests](https://github.com/yaugust939/prokop/actions/workflows/tests.yml/badge.svg)](https://github.com/yaugust939/prokop/actions/workflows/tests.yml)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Оригинальная реализация ядра универсального агента, написанная **с нуля по
 поведенческой спецификации** в процессе *чистой комнаты* (clean room design).
 Код не копировался ни из одного существующего проекта — только поведение,
