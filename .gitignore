@@ -1,0 +1,25 @@
+# === Секреты и ключи — НИКОГДА не коммитить ===
+.env
+*.env
+.env.*
+
+# === Эталон-бенчмарк (чистая комната: оригинал не публикуется) ===
+reference/
+
+# === Локальное тулинг-конфигурирование ===
+.opencode/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
+venv/
+
+# === Артефакты запусков и локальные дампы ===
+.agent_core_dumps/
+.agent_core_session.json
+*.out

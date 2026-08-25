@@ -1,0 +1,23 @@
+[project]
+name = "agent-core"
+version = "0.1.0"
+description = "Оригинальная чистая реализация ядра универсального агента (clean room, по OpenSpec hermes-core)"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_core*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
