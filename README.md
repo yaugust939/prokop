@@ -1,21 +1,16 @@
-# prokop — универсальное ядро агента (clean room)
+# prokop — универсальное ядро агента
 
 [![tests](https://github.com/yaugust939/prokop/actions/workflows/tests.yml/badge.svg)](https://github.com/yaugust939/prokop/actions/workflows/tests.yml)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Оригинальная реализация ядра универсального агента, написанная **с нуля по
-поведенческой спецификации** в процессе *чистой комнаты* (clean room design).
-Код не копировался ни из одного существующего проекта — только поведение,
-интерфейсы и контракты, зафиксированные в спецификациях OpenSpec.
-
-> Поведенческим ориентиром служил открытый агент [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
-> (MIT). Реализация в этом репозитории независима и оригинальна; процесс
-> задокументирован в [`clean-room/`](clean-room/REGLAMENT.md) и
-> [`openspec/`](openspec).
+**prokop** — ядро универсального агента: цикл хода, инструменты, навыки, память,
+хранилище сессий, слой модельных провайдеров и обвес (планировщик, субагенты,
+терминальные бэкенды, гейтвей). Реализовано по поведенческой спецификации
+(OpenSpec) — интерфейс и контракты зафиксированы в [`openspec/`](openspec).
 
 ## Возможности
 
-**Ядро (`agent_core`):**
+**Ядро (`prokop`):**
 - `loop` — цикл хода агента: пролог → «модель → инструменты → модель» → финализация;
   прерывание/steer/redirect, стриминг, байт-стабильный системный промпт,
   бюджеты итераций и настенных часов, ретраи, аренда сессии;
@@ -28,7 +23,7 @@
 - `providers` — слой модельных провайдеров (профили, реестр, смена модели без правки кода);
 - `transport` — транспорт вызовов модели (режим `chat_completions`).
 
-**Обвес (`agent_core`):**
+**Обвес (`prokop`):**
 - `cron` — планировщик отложенных/периодических заданий (разбор расписаний,
   тикер, исполнение «без агента», доставка, переживание перезапуска);
 - `subagents` — делегирование: изоляция ребёнка, роли лист/оркестратор,
@@ -75,9 +70,9 @@ python src/smoke_live.py
 
 ```python
 import asyncio
-from agent_core.providers.registry import ProviderRegistry
-from agent_core.transport.http_transport import ChatCompletionsTransport
-from agent_core.loop.turn import AgentTurn
+from prokop.providers.registry import ProviderRegistry
+from prokop.transport.http_transport import ChatCompletionsTransport
+from prokop.loop.turn import AgentTurn
 
 async def main():
     reg = ProviderRegistry(); reg.discover()
@@ -91,10 +86,11 @@ asyncio.run(main())
 
 ## Интеграция с opencode
 
-Ядро подключается к [opencode](https://opencode.ai) как MCP-сервер и даёт
-инструменты `agent_turn`, `agent_schedule_job`, `agent_list_jobs`,
-`agent_run_ticker`, `agent_run_command` (см. `src/`, раздел про провайдеров и
-планировщик).
+Ядро подключается к [opencode](https://opencode.ai) как MCP-сервер `prokop` и
+даёт инструменты `prokop_agent_turn`, `prokop_agent_schedule_job`,
+`prokop_agent_list_jobs`, `prokop_agent_run_ticker`, `prokop_agent_run_command`.
+В переключателе агентов opencode доступен агент **prokop** (универсальный
+помощник), использующий эти инструменты.
 
 ## Тесты
 
@@ -103,14 +99,10 @@ cd src
 python -m pytest tests -q
 ```
 
-На момент публикации — **171 тест**, все зелёные.
+На момент публикации — **173 теста**, все зелёные.
 
-## Чистая комната
+## Спецификация
 
-- [`clean-room/REGLAMENT.md`](clean-room/REGLAMENT.md) — регламент барьера
-  (роли «читает эталон» / «пишет код только по спецификации»).
-- [`clean-room/log.md`](clean-room/log.md) — журнал доступа; инвариант:
-  реализация никогда не читала эталон.
 - [`openspec/`](openspec) — поведенческие спецификации, по которым написан код.
 
 Эталонный репозиторий в комплект **не входит** и не требуется для сборки.

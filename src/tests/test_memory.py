@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import json
 
-from agent_core.memory.manager import MemoryManager
-from agent_core.memory.provider import BuiltinMemoryProvider, MemoryProvider
-from agent_core.memory.injection import (
+from prokop.memory.manager import MemoryManager
+from prokop.memory.provider import BuiltinMemoryProvider, MemoryProvider
+from prokop.memory.injection import (
     wrap_memory_context,
     scrub_memory_context,
     inject_into_user_message,

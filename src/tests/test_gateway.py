@@ -7,17 +7,17 @@ from datetime import datetime
 
 import pytest
 
-from agent_core.gateway.adapters import (
+from prokop.gateway.adapters import (
     ChatInfo,
     ErrorCategory,
     PlatformAdapter,
     SendResult,
     is_retryable,
 )
-from agent_core.gateway.auth import SenderGate, UnauthorizedPolicy
-from agent_core.gateway.cache import AgentCache
-from agent_core.gateway.engine import Gateway, HandleOutcome
-from agent_core.gateway.events import (
+from prokop.gateway.auth import SenderGate, UnauthorizedPolicy
+from prokop.gateway.cache import AgentCache
+from prokop.gateway.engine import Gateway, HandleOutcome
+from prokop.gateway.events import (
     CONTROL_NEW,
     CONTROL_RESET,
     CONTROL_STOP,
@@ -27,9 +27,9 @@ from agent_core.gateway.events import (
     Source,
     parse_control_command,
 )
-from agent_core.gateway.guard import Admit, SessionGuard, TurnMode
-from agent_core.gateway.keys import CHANNEL, DM, GROUP, session_key
-from agent_core.gateway.response import (
+from prokop.gateway.guard import Admit, SessionGuard, TurnMode
+from prokop.gateway.keys import CHANNEL, DM, GROUP, session_key
+from prokop.gateway.response import (
     mask_secrets,
     prepare_response,
     replace_provider_errors,

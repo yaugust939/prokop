@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from agent_core.backends.base import TerminalBackend
-from agent_core.backends.config import BackendConfig, resolve_backend, backend_config_from_dict
-from agent_core.backends.errors import InfrastructureError
-from agent_core.backends.local import LocalBackend
-from agent_core.backends.result import CommandResult, truncate_output
-from agent_core.backends.snapshot import SessionSnapshot, DEFAULT_EXCLUDED_VARS
+from prokop.backends.base import TerminalBackend
+from prokop.backends.config import BackendConfig, resolve_backend, backend_config_from_dict
+from prokop.backends.errors import InfrastructureError
+from prokop.backends.local import LocalBackend
+from prokop.backends.result import CommandResult, truncate_output
+from prokop.backends.snapshot import SessionSnapshot, DEFAULT_EXCLUDED_VARS
 
 
 # --- обрезка вывода -------------------------------------------------------
@@ -50,11 +50,11 @@ def test_snapshot_roundtrip_and_atomic(tmp_path):
 
 def test_snapshot_excludes_service_vars(tmp_path):
     snap = SessionSnapshot(tmp_path / "session.json")
-    env = {"USER_VAR": "keep", "AGENT_CORE_SESSION_ID": "secret", "_": "noise"}
+    env = {"USER_VAR": "keep", "PROKOP_SESSION_ID": "secret", "_": "noise"}
     snap.save(env)
     loaded = snap.load()
     assert "USER_VAR" in loaded
-    assert "AGENT_CORE_SESSION_ID" not in loaded
+    assert "PROKOP_SESSION_ID" not in loaded
     assert "_" not in loaded
 
 

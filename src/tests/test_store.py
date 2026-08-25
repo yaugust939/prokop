@@ -6,13 +6,13 @@ import io
 
 import pytest
 
-from agent_core.store.sessions import SessionStore
-from agent_core.store.search import (
+from prokop.store.sessions import SessionStore
+from prokop.store.search import (
     search_messages,
     search_sessions,
     sanitize_query,
 )
-from agent_core.store.portability import export_sessions, import_sessions
+from prokop.store.portability import export_sessions, import_sessions
 
 
 @pytest.fixture()

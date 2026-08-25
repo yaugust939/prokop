@@ -7,17 +7,17 @@ import json
 
 import pytest
 
-from agent_core.tools.registry import Tool, ToolRegistry, register, validate_result, reset_registry
-from agent_core.tools.toolsets import (
+from prokop.tools.registry import Tool, ToolRegistry, register, validate_result, reset_registry
+from prokop.tools.toolsets import (
     Toolset,
     resolve_toolset,
     get_tool_definitions,
     ToolsetError,
 )
-from agent_core.tools.dispatcher import handle_function_call, TOOL_ERROR_MARKER
-from agent_core.tools.coercion import coerce_arguments
-from agent_core.tools.safety import classify_command, ApprovalDecision
-from agent_core.tools.disclosure import apply_disclosure, bridge_tool_schemas
+from prokop.tools.dispatcher import handle_function_call, TOOL_ERROR_MARKER
+from prokop.tools.coercion import coerce_arguments
+from prokop.tools.safety import classify_command, ApprovalDecision
+from prokop.tools.disclosure import apply_disclosure, bridge_tool_schemas
 
 
 @pytest.fixture()

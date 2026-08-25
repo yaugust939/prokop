@@ -16,7 +16,7 @@ import pytest
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """Изолированный домашний каталог профиля для каждого теста."""
-    from agent_core import home as home_mod
+    from prokop import home as home_mod
 
     home_dir = tmp_path / "home"
     monkeypatch.setenv(home_mod.ENV_HOME, str(home_dir))

@@ -7,12 +7,12 @@ import time
 
 import pytest
 
-from agent_core.skills.model import parse_skill_file, SkillError, validate_related_path
-from agent_core.skills.access import SkillsAccess
-from agent_core.skills.discovery import discover_skills, SkillStore
-from agent_core.skills.index import SkillsIndex
-from agent_core.skills.curator import Curator
-from agent_core.skills.model import Skill, SkillMeta
+from prokop.skills.model import parse_skill_file, SkillError, validate_related_path
+from prokop.skills.access import SkillsAccess
+from prokop.skills.discovery import discover_skills, SkillStore
+from prokop.skills.index import SkillsIndex
+from prokop.skills.curator import Curator
+from prokop.skills.model import Skill, SkillMeta
 
 SKILL_TEXT = """---
 name: demo-skill

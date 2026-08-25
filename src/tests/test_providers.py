@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from agent_core.providers.profile import ProviderProfile, API_MODES
-from agent_core.providers.registry import (
+from prokop.providers.profile import ProviderProfile, API_MODES
+from prokop.providers.registry import (
     ProviderRegistry,
     resolve_provider_by_url,
 )

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from agent_core import home as home_mod
-from agent_core.config import Config, load_config, save_config, config_path
-from agent_core.timeutil import now, reset_cache
-from agent_core.logging_setup import configure, get_logger
+from prokop import home as home_mod
+from prokop.config import Config, load_config, save_config, config_path
+from prokop.timeutil import now, reset_cache
+from prokop.logging_setup import configure, get_logger
 
 
 def test_home_resolves_profile(home):
@@ -29,7 +29,7 @@ def test_config_roundtrip(home):
     config.memory.provider = "builtin"
     config.toolsets.enabled = ["core", "coding"]
     config.auxiliary["compression"] = __import__(
-        "agent_core.config", fromlist=["AuxiliaryModelConfig"]
+        "prokop.config", fromlist=["AuxiliaryModelConfig"]
     ).AuxiliaryModelConfig(model="aux-model", timeout=10.0)
     save_config(config, home)
     loaded = load_config(home)
@@ -53,4 +53,4 @@ def test_now_is_timezone_aware(home):
 def test_logger_namespaced():
     configure(level="WARNING")
     logger = get_logger("tools")
-    assert logger.name == "agent_core.tools"
+    assert logger.name == "prokop.tools"
