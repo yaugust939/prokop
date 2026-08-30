@@ -51,6 +51,12 @@ DEFAULT_TOOLSETS: dict[str, Toolset] = {
         description="Минимальный защищённый набор.",
         tools=[],
     ),
+    "gui": Toolset(
+        name="gui",
+        description="Десктопная GUI-автоматизация (computer_use).",
+        includes=["core"],
+        tools=["computer_use"],
+    ),
 }
 
 
