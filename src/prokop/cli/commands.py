@@ -30,6 +30,8 @@ from prokop.loop.turn import AgentTurn
 from prokop.mcp.client import McpClient
 from prokop.mcp.config import McpServerConfig, parse_servers
 from prokop.mcp.runtime import tool_name
+from prokop.memory.file_provider import FileMemoryProvider
+from prokop.memory.provider import MemoryProvider
 from prokop.paths import DATABASE_NAME
 from prokop.providers.registry import ProviderRegistry
 from prokop.security.audit import DEFAULT_TAIL, AuditLog
@@ -503,6 +505,92 @@ def cron_tick(ctx: Context) -> Result:
         f"отложено агенту: {len(data['deferred_agent'])}"
     )
     return Result(data=data, text=text)
+
+
+# --- постоянная память ---------------------------------------------------
+
+
+def memory_provider(ctx: Context) -> Optional[MemoryProvider]:
+    """Внешний провайдер памяти профиля (или ``None``)."""
+    from prokop.memory.factory import build_provider
+
+    return build_provider(ctx.config_loader(ctx.home), ctx.home)
+
+
+def _memory_provider_name(ctx: Context) -> str:
+    return (ctx.config_loader(ctx.home).memory.provider or "builtin").strip() or "builtin"
+
+
+def _file_memory(ctx: Context) -> Optional[FileMemoryProvider]:
+    provider = memory_provider(ctx)
+    return provider if isinstance(provider, FileMemoryProvider) else None
+
+
+def _memory_unsupported(ctx: Context) -> Result:
+    name = _memory_provider_name(ctx)
+    return Result(
+        data={"provider": name, "facts": [], "records": [], "count": 0},
+        text=f"Память профиля не поддерживает перечисление фактов (провайдер: {name}).",
+    )
+
+
+def memory_list(ctx: Context) -> Result:
+    """Перечислить факты постоянной памяти."""
+    provider = _file_memory(ctx)
+    if provider is None:
+        return _memory_unsupported(ctx)
+
+    facts = provider.facts()
+    if facts:
+        text = "\n".join(
+            f"{record.get('key')} = {record.get('value')}  ({record.get('at') or '—'})"
+            for record in facts
+        )
+    else:
+        text = "Фактов в памяти нет."
+    return Result(
+        data={"provider": provider.name, "facts": facts, "count": len(facts)}, text=text
+    )
+
+
+def memory_search(ctx: Context, query: str, *, limit: int = 10) -> Result:
+    """Найти записи в постоянной памяти."""
+    provider = _file_memory(ctx)
+    if provider is None:
+        return _memory_unsupported(ctx)
+
+    records = provider.search(query, limit=limit)
+    if records:
+        text = "\n".join(
+            f"{record.get('kind')}: "
+            f"{str(record.get('key')) + ' = ' if record.get('key') else ''}"
+            f"{record.get('value')}"
+            for record in records
+        )
+    else:
+        text = "Совпадений нет."
+    return Result(
+        data={
+            "provider": provider.name,
+            "query": query,
+            "records": records,
+            "count": len(records),
+        },
+        text=text,
+    )
+
+
+def memory_forget(ctx: Context, key: str) -> Result:
+    """Удалить факт из постоянной памяти."""
+    provider = _file_memory(ctx)
+    if provider is None:
+        return _memory_unsupported(ctx)
+
+    removed = provider.forget(key)
+    text = f"Факт {key!r} удалён." if removed else f"Факт {key!r} не найден."
+    return Result(
+        data={"provider": provider.name, "key": key, "removed": removed}, text=text
+    )
 
 
 # --- политики безопасности -----------------------------------------------
