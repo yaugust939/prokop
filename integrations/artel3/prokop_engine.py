@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-"""Мозг роли OS3 на ядре prokop.
+"""Мозг ролей OS3 на ядре prokop.
 
-Роль из ``ARTEL_PROKOP_ROLES`` (по умолчанию ``prokopiy``) обслуживается
-``AgentTurn`` из prokop вместо собственного цикла ``llm_call`` раннера:
-тот же персонаж, та же память, тот же набор инструментов (MCP-шлюзы, vault,
-правки сайтов) — но цикл хода, бюджеты, ретраи и обработка ошибок берутся из
-ядра prokop.
+Роли из ``ARTEL_PROKOP_ROLES`` обслуживаются ``AgentTurn`` из prokop вместо
+собственного цикла ``llm_call`` раннера: тот же персонаж, та же память, тот же
+набор инструментов (MCP-шлюзы, vault, правки сайтов) — но цикл хода, бюджеты,
+ретраи и обработка ошибок берутся из ядра prokop.
 
 Инструменты не меняются: реестр prokop получает схемы, переданные раннером, а
 вызовы уходят в его же ``call_tool`` — слой доступа к MCP/vault/сайтам остаётся
 единственным.
+
+**Защита от зацикливания портирована.** Раннер останавливал агента, который
+повторяет один и тот же падающий вызов (в артели был случай: 86 вызовов, ни
+одной записи). Здесь тот же учёт: после 3 повторов в результат инструмента
+добавляется указание не повторять вызов, после 5 — ход прерывается через
+``TurnControl``, а задача завершается честным текстом «данные получить не
+удалось» с кодом ошибки.
 
 Отказобезопасность: при любой ошибке (импорт, инициализация, ход) возвращается
 ``None`` — раннер откатывается на прежний ``llm_call``. Полностью выключить
@@ -17,23 +23,33 @@
 
 Переменные окружения:
 
-- ``ARTEL_PROKOP_ROLES``  — роли на prokop (по умолчанию ``prokopiy``);
-- ``ARTEL_PROKOP_MODEL``  — модель (по умолчанию ``deepseek-chat``, как в раннере);
-- ``ARTEL_PROKOP_TIMEOUT``— таймаут HTTP, секунд (по умолчанию 180).
+- ``ARTEL_PROKOP_ROLES``   — роли на prokop: ``*`` (все), список через запятую
+  или пусто (выключено). По умолчанию ``prokopiy``;
+- ``ARTEL_PROKOP_MODEL``   — модель (по умолчанию ``deepseek-chat``, как в раннере);
+- ``ARTEL_PROKOP_TIMEOUT`` — таймаут HTTP, секунд (по умолчанию 180).
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from dataclasses import replace
 from typing import Any, Callable, Optional
 
-#: Роли, обслуживаемые ядром prokop.
+#: Значения, означающие «все роли».
+_ALL_MARKERS = ("*", "all", "все")
+
+_RAW_ROLES = os.environ.get("ARTEL_PROKOP_ROLES", "prokopiy")
+
+#: Все роли обслуживаются ядром prokop.
+PROKOP_ALL = _RAW_ROLES.strip().lower() in _ALL_MARKERS
+
+#: Явно перечисленные роли.
 PROKOP_ROLES = {
     a.strip()
-    for a in os.environ.get("ARTEL_PROKOP_ROLES", "prokopiy").split(",")
-    if a.strip()
+    for a in _RAW_ROLES.split(",")
+    if a.strip() and a.strip().lower() not in _ALL_MARKERS
 }
 
 #: Модель роли (совпадает с моделью раннера, чтобы поведение было сопоставимым).
@@ -41,6 +57,12 @@ PROKOP_MODEL = os.environ.get("ARTEL_PROKOP_MODEL", "deepseek-chat")
 
 #: Таймаут HTTP до провайдера, секунд.
 PROKOP_TIMEOUT = float(os.environ.get("ARTEL_PROKOP_TIMEOUT", "180"))
+
+#: Сколько повторов одного падающего вызова до указания модели.
+FAIL_NOTE_AFTER = int(os.environ.get("ARTEL_PROKOP_FAIL_NOTE", "3"))
+
+#: Сколько повторов до прерывания хода.
+FAIL_STOP_AFTER = int(os.environ.get("ARTEL_PROKOP_FAIL_STOP", "5"))
 
 #: Эндпоинт провайдера (тот же, что у раннера).
 DEEPSEEK_URL = os.environ.get(
@@ -55,6 +77,8 @@ def _log(message: str) -> None:
 
 def role_enabled(agent: str) -> bool:
     """Обслуживается ли роль ядром prokop."""
+    if PROKOP_ALL:
+        return True
     return (agent or "").split(":")[-1] in PROKOP_ROLES
 
 
@@ -108,7 +132,71 @@ def _identity(persona: Optional[str], memory_block: Optional[str]) -> str:
     return "\n\n".join(parts)
 
 
-def _build_registry(specs: list[dict[str, Any]], bridge: Callable[[str, dict], str]) -> Any:
+def _make_guarded_bridge(
+    tool_bridge: Callable[[str, dict], str],
+    *,
+    agent: str,
+    control: Any,
+    state: dict[str, Any],
+    logger: Callable[[str, str], None],
+) -> Callable[[str, dict], str]:
+    """Обёртка вызова инструмента с учётом повторов (как в ``llm_call``).
+
+    Возвращает модели только текст результата; конверт ``{text, is_error}``
+    разбирается здесь, чтобы поведение совпадало с прежним раннером.
+    """
+
+    def bridge(name: str, args: dict) -> str:
+        raw = tool_bridge(name, args) or "{}"
+        try:
+            envelope = json.loads(raw)
+        except json.JSONDecodeError:
+            envelope = {"text": raw, "is_error": False}
+        if not isinstance(envelope, dict):
+            envelope = {"text": str(raw), "is_error": False}
+
+        text = str(envelope.get("text") or "")
+        is_error = bool(envelope.get("is_error"))
+        failed = is_error or '"ok": false' in text or '"ok":false' in text
+
+        signature = name + ":" + json.dumps(args or {}, ensure_ascii=False, sort_keys=True)
+        streaks: dict[str, int] = state["fail"]
+        if failed:
+            streaks[signature] = streaks.get(signature, 0) + 1
+        else:
+            streaks.pop(signature, None)
+        repeats = streaks.get(signature, 0)
+
+        logger(
+            agent,
+            f"tool {name} args={json.dumps(args or {}, ensure_ascii=False)[:160]} "
+            f"-> {len(text)} симв.{' (ошибка)' if is_error else ''}"
+            + (f" [повтор ошибки {repeats}]" if repeats else ""),
+        )
+
+        if repeats >= FAIL_NOTE_AFTER:
+            text += (
+                "\n\n[СИСТЕМА] Этот же вызов падает подряд "
+                + str(repeats)
+                + " раз. НЕ повторяй его. Собери отчёт из уже полученных данных, "
+                "явно напиши, каких данных нет и почему (с кодом ошибки), и заверши."
+            )
+        if repeats >= FAIL_STOP_AFTER:
+            logger(
+                agent,
+                f"тупик: вызов {name} падает {repeats} раз — прекращаю итерации",
+            )
+            state["deadlock"] = True
+            control.interrupt()
+        return text
+
+    return bridge
+
+
+def _build_registry(
+    specs: list[dict[str, Any]],
+    bridge: Callable[[str, dict], str],
+) -> Any:
     """Реестр prokop с инструментами раннера (схемы — от раннера, вызов — в bridge)."""
     from prokop.tools.registry import Tool, ToolRegistry
 
@@ -167,22 +255,28 @@ def run(
         return None
 
     try:
+        from prokop.loop.control import TurnControl
         from prokop.loop.turn import AgentTurn
         from prokop.transport.http_transport import ChatCompletionsTransport
     except Exception as exc:  # ядро не установлено — не роняем флот
         logger(agent, f"prokop недоступен ({type(exc).__name__}: {exc}) — откат на llm_call")
         return None
 
-    prompt = (
-        f"Задача: {title}"
-        + (f" Контекст: {description}" if description else "")
-    )
+    prompt = f"Задача: {title}" + (f" Контекст: {description}" if description else "")
+
+    control = TurnControl()
+    state: dict[str, Any] = {"fail": {}, "deadlock": False}
 
     try:
         profile = _profile()
-        registry = (
-            _build_registry(specs or [], tool_bridge) if specs and tool_bridge else None
+        guarded = (
+            _make_guarded_bridge(
+                tool_bridge, agent=agent, control=control, state=state, logger=logger
+            )
+            if tool_bridge is not None
+            else None
         )
+        registry = _build_registry(specs or [], guarded) if guarded and specs else None
         schemas = [
             {
                 "type": "function",
@@ -197,9 +291,7 @@ def run(
             if (spec.get("function") or {}).get("name")
         ]
 
-        transport = ChatCompletionsTransport(
-            profile, api_key=key, timeout=PROKOP_TIMEOUT
-        )
+        transport = ChatCompletionsTransport(profile, api_key=key, timeout=PROKOP_TIMEOUT)
         turn = AgentTurn(
             transport=transport,
             tool_registry=registry,
@@ -209,6 +301,7 @@ def run(
             identity=_identity(persona, memory_block),
             max_tokens=max_tokens,
             max_iterations=max_iterations or 12,
+            control=control,
         )
 
         async def _execute() -> Any:
@@ -219,15 +312,26 @@ def run(
 
         result = asyncio.run(_execute())
     except Exception as exc:  # любая ошибка — откат, флот не должен падать
-        logger(agent, f"prokop: ход не удался ({type(exc).__name__}: {str(exc)[:200]}) — откат")
+        logger(
+            agent,
+            f"prokop: ход не удался ({type(exc).__name__}: {str(exc)[:200]}) — откат",
+        )
         return None
 
     text = (result.final_response or "").strip()
-    ok = bool(result.completed) and not bool(result.failed)
+    deadlock = bool(state["deadlock"])
+    if deadlock and not text:
+        text = "Инструмент стабильно возвращает ошибку — данные получить не удалось."
+
+    # Тупик инструмента завершает задачу честным ответом (как прежний раннер),
+    # поэтому это не «падение», а результат с объяснением.
+    ok = (bool(result.completed) and not bool(result.failed)) or deadlock
+
     logger(
         agent,
         f"prokop: ход завершён api_calls={result.api_calls} "
-        f"messages={len(result.messages)} failed={result.failed} символов={len(text)}",
+        f"messages={len(result.messages)} failed={result.failed} "
+        f"deadlock={deadlock} символов={len(text)}",
     )
     if not text:
         return None
@@ -236,6 +340,8 @@ def run(
 
 if __name__ == "__main__":  # диагностика: python3 prokop_engine.py
     print("prokop установлен:", available())
-    print("роли на prokop:", sorted(PROKOP_ROLES))
+    print("все роли на prokop:", PROKOP_ALL)
+    print("роли на prokop:", sorted(PROKOP_ROLES) or ("*" if PROKOP_ALL else "—"))
     print("base_url:", base_url())
     print("модель:", PROKOP_MODEL)
+    print("порог указания модели:", FAIL_NOTE_AFTER, "| порог остановки:", FAIL_STOP_AFTER)
