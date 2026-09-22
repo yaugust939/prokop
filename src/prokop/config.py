@@ -57,6 +57,8 @@ class MemoryConfig:
     """Конфигурация постоянной памяти."""
 
     provider: Optional[str] = None
+    #: Настройки выбранного провайдера (разбираются самим провайдером).
+    options: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

@@ -101,6 +101,9 @@ asyncio.run(main())
 | `prokop security show` | действующие правила безопасности и границы слоя |
 | `prokop security check "<команда>"` | решение по команде без выполнения |
 | `prokop security audit [--limit N]` | журнал решений |
+| `prokop memory list` | сохранённые факты профиля |
+| `prokop memory search <запрос>` | поиск по памяти |
+| `prokop memory forget <ключ>` | удалить факт |
 | `prokop turn "<запрос>" [--model M] [--provider P]` | один ход агента |
 | `prokop chat [--model M] [--provider P]` | линейный цикл ходов; выход по `exit`/`quit`/EOF |
 | `prokop tui [--model M] [--provider P]` | терминальный интерфейс (нужен extra `tui`) |
@@ -221,6 +224,67 @@ best-effort: сбой журнала не прерывает операцию. �
 Изоляция (Job Objects / namespaces / sandbox-exec) платформенно-специфична и
 в это изменение не входит.
 
+### Память
+```yaml
+memory:
+  provider: file           # builtin (по умолчанию) | file
+  options:
+    max_records: 2000
+    prefetch_limit: 5
+    filename: memory.jsonl
+```
+
+Провайдер `file` хранит постоянную память в `<профиль>/memory/memory.jsonl`:
+
+- **факты** пишет агент инструментом `memory_save` (ключ → значение);
+- **дайджесты ходов** дописываются автоматически при синхронизации хода;
+- **перед ходом** релевантные записи подгружаются в контекст по совпадению
+  слов (регистр не учитывается, кириллица поддерживается);
+- **поиск и удаление** — инструменты `memory_search` и `memory_forget`.
+
+Наблюдение и чистка без кода:
+
+```bash
+prokop memory list
+prokop memory search httpx
+prokop memory forget стек
+```
+
+Особенности: файл только дописывается (частично повреждённый файл не делает
+память нечитаемой — битые строки пропускаются); при превышении `max_records`
+хранилище уплотняется атомарно, остаются самые свежие записи. Память лежит в
+профиле, а не в проекте, — не храните в ней секреты.
+
+Неизвестное имя провайдера в конфигурации даёт предупреждение в лог и
+оставляет встроенную память: опечатка не ломает запуск.
+
+### Адаптер платформы (Telegram)
+```python
+from prokop.gateway.engine import Gateway
+from prokop.gateway.telegram import TelegramAdapter
+
+adapter = TelegramAdapter(token="123:ABC")
+await adapter.connect()                            # getMe: проверка токена
+updates = await adapter.get_updates(offset, timeout=25)
+
+event = adapter.normalize(updates[0])              # → InboundEvent
+if event is not None:
+    result = await Gateway(run_turn).handle(event)  # авторизация → ход → ответ
+    await adapter.send_text(event.source.chat_id, result.text or "")
+
+await adapter.disconnect()
+```
+
+Что покрыто: подключение с проверкой учётных данных, отправка текста с
+разбиением по лимиту платформы (4096) по границе строки, контекст ответа,
+индикатор набора, информация о чате, отправка файлов, длинный опрос и
+нормализация обновлений (текст, медиа, тема, ответ, пост канала).
+
+Ошибки платформы отображаются в категории контракта: `auth` (401/403),
+`rate_limit` (429), `transient` (5xx), `network` (сбои связи), `invalid`
+(400). По `is_retryable` решается вопрос повторов. `send_text` не поднимает
+исключений — сбой возвращается результатом.
+
 ### Терминальный интерфейс (TUI)
 ```bash
 pip install prokop[tui]      # опциональная зависимость (prompt_toolkit)
@@ -322,7 +386,7 @@ print(b.run("echo hello && pwd").output)
 ## 6. Тесты
 ```bash
 cd src
-python -m pytest tests -q        # 403 тестов
+python -m pytest tests -q        # 481 тестов
 ```
 
 ## 7. Устранение неполадок

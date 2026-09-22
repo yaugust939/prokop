@@ -83,12 +83,14 @@ prokop cron list|add|tick            # планировщик
 prokop mcp list|tools|call           # внешние MCP-серверы
 prokop checkpoints list|create|restore|prune   # снимки состояния и откат
 prokop security show|check|audit     # политики безопасности и журнал решений
+prokop memory list|search|forget     # постоянная память профиля
 ```
 
 Локальные команды (`doctor`, `config`, `sessions`, `skills`, `providers`,
-`cron`, `mcp`, `checkpoints`, `security`) работают без ключа модели и без сети.
-Флаг `--json` даёт машиночитаемый вывод, коды возврата пригодны для скриптов:
-`0` — успех, `1` — ошибка пользователя/конфигурации, `2` — ошибка исполнения.
+`cron`, `mcp`, `checkpoints`, `security`, `memory`) работают без ключа модели и
+без сети. Флаг `--json` даёт машиночитаемый вывод, коды возврата пригодны для
+скриптов: `0` — успех, `1` — ошибка пользователя/конфигурации, `2` — ошибка
+исполнения.
 
 ## Внешние MCP-серверы
 
@@ -115,6 +117,49 @@ prokop mcp call files read --args '{"path": "."}'
 
 MCP SDK не требуется: клиент реализован на стандартной библиотеке
 (JSON-RPC 2.0 поверх stdio).
+
+## Память
+
+Постоянная память профиля, переживающая перезапуск, — провайдер `file`:
+
+```yaml
+# ~/.prokop/<профиль>/config.yaml
+memory:
+  provider: file
+  options:
+    max_records: 2000      # предел записей (старые уплотняются)
+    prefetch_limit: 5      # сколько записей подгружать в контекст
+```
+
+Агент получает инструменты `memory_save`, `memory_search`, `memory_forget`;
+перед ходом релевантные записи подгружаются в контекст по совпадению слов.
+Хранилище — `~/.prokop/<профиль>/memory/memory.jsonl` (в профиле, не в
+проекте). Наблюдение: `prokop memory list|search|forget`. Неизвестное имя
+провайдера даёт предупреждение и оставляет встроенную память.
+
+## Адаптеры платформ
+
+`gateway/telegram.py` — реализация контракта адаптера поверх HTTP Bot API
+(`httpx`, без новых зависимостей): подключение с проверкой токена, отправка с
+разбиением по лимиту платформы, индикатор набора, информация о чате, отправка
+файлов. Входящие обновления нормализуются в событие гейтвея, обновления
+забираются длинным опросом:
+
+```python
+from prokop.gateway.telegram import TelegramAdapter
+from prokop.gateway.engine import Gateway
+
+adapter = TelegramAdapter(token="123:ABC")
+await adapter.connect()                       # getMe
+updates = await adapter.get_updates(offset=None, timeout=25)
+event = adapter.normalize(updates[0])         # → InboundEvent
+result = await Gateway(run_turn).handle(event)  # авторизация, ход, ответ
+await adapter.send_text(event.source.chat_id, result.text or "")
+```
+
+Ошибки платформы отображаются в категории контракта (`auth`, `rate_limit`,
+`transient`, `network`, `invalid`) — по ним осмысленно решается вопрос
+повторов.
 
 ## Политики безопасности
 
@@ -222,7 +267,7 @@ cd src
 python -m pytest tests -q
 ```
 
-На момент публикации — **403 тестов**, все зелёные.
+На момент публикации — **481 тестов**, все зелёные.
 
 ## Спецификация
 

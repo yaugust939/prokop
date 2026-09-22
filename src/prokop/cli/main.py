@@ -119,6 +119,19 @@ def build_parser() -> argparse.ArgumentParser:
     mcp_call_p.add_argument("--args", help="аргументы вызова как JSON-объект")
     _add_json_flag(mcp_call_p)
 
+    # memory
+    mem_p = sub.add_parser("memory", help="постоянная память профиля")
+    mem_sub = mem_p.add_subparsers(dest="memory_command", metavar="<подкоманда>")
+    mem_list_p = mem_sub.add_parser("list", help="перечислить факты")
+    _add_json_flag(mem_list_p)
+    mem_search_p = mem_sub.add_parser("search", help="поиск по памяти")
+    mem_search_p.add_argument("query", help="поисковый запрос")
+    mem_search_p.add_argument("--limit", type=int, default=10)
+    _add_json_flag(mem_search_p)
+    mem_forget_p = mem_sub.add_parser("forget", help="удалить факт по ключу")
+    mem_forget_p.add_argument("key", help="ключ факта")
+    _add_json_flag(mem_forget_p)
+
     # security
     sec_p = sub.add_parser("security", help="политики безопасности")
     sec_sub = sec_p.add_subparsers(dest="security_command", metavar="<подкоманда>")
@@ -235,6 +248,16 @@ def dispatch(args: argparse.Namespace, ctx: Context) -> Result:
         if sub == "tick":
             return commands.cron_tick(ctx)
         raise CliError(f"неизвестная подкоманда cron {sub!r}", EXIT_USAGE)
+
+    if command == "memory":
+        sub = _require_subcommand(args.memory_command, "memory", "list|search <запрос>|forget <ключ>")
+        if sub == "list":
+            return commands.memory_list(ctx)
+        if sub == "search":
+            return commands.memory_search(ctx, args.query, limit=args.limit)
+        if sub == "forget":
+            return commands.memory_forget(ctx, args.key)
+        raise CliError(f"неизвестная подкоманда memory {sub!r}", EXIT_USAGE)
 
     if command == "security":
         sub = _require_subcommand(args.security_command, "security", "show|check <команда>|audit")
