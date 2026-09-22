@@ -194,9 +194,12 @@ def test_without_tty_refuses(tmp_path):
     assert "терминал" in str(exc.value)
 
 
-def test_without_key_refuses(tmp_path):
+def test_without_key_refuses(tmp_path, monkeypatch):
     from prokop.cli.commands import CliError
 
+    # Тест про ключ, а не про окружение: зависимость считаем доступной, иначе
+    # на машине без extra `tui` проверка ключа просто не достигается.
+    monkeypatch.setattr(tui_app, "prompt_toolkit_available", lambda: True)
     ctx = make_ctx(tmp_path, tty=True, env={})
     with pytest.raises(CliError) as exc:
         tui_app.run_tui(ctx)
