@@ -6,10 +6,14 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        # Ядро обязано быть платформенно-нейтральным: гоняем все три ОС,
+        # иначе Windows-ветки (taskkill, CREATE_NO_WINDOW, фолбэк блокировки)
+        # не покрыты вообще.
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - name: Checkout
@@ -28,3 +32,21 @@ jobs:
 
       - name: Run tests
         run: python -m pytest src/tests -q
+
+  # Проверка, что в коде не осталось личных абсолютных путей и платформенных
+  # хардкодов вне известных точек (см. docs/PLATFORM_NOTES.md).
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: No personal absolute paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -rInE 'C:\\\\Users\\\\[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+/' src/prokop src/tests; then
+            echo "::error::найден личный абсолютный путь в коде ядра"
+            exit 1
+          fi
+          echo "OK: личных путей нет"

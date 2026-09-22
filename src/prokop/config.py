@@ -93,6 +93,16 @@ class Config:
     auxiliary: dict[str, AuxiliaryModelConfig] = field(default_factory=dict)
     timezone: Optional[str] = None
     logging: LoggingConfig = field(default_factory=LoggingConfig)
+    #: Секция MCP-серверов (``mcp.servers``). Хранится сырым словарём из YAML;
+    #: типизированный разбор — в :mod:`prokop.mcp.config`, чтобы не тянуть
+    #: зависимость на пакет ``mcp`` из схемы конфигурации.
+    mcp: dict[str, Any] = field(default_factory=dict)
+    #: Секция снимков состояния (``checkpoints``). Разбор — в
+    #: :mod:`prokop.checkpoints.store`.
+    checkpoints: dict[str, Any] = field(default_factory=dict)
+    #: Секция политик безопасности (``security``). Разбор — в
+    #: :mod:`prokop.security.policy`.
+    security: dict[str, Any] = field(default_factory=dict)
 
     def aux(self, task: str) -> AuxiliaryModelConfig:
         """Вспомогательная модель для задачи; пустая, если не задана."""
@@ -113,6 +123,9 @@ class Config:
             for name, spec in (data.get("auxiliary") or {}).items()
         }
         logging_cfg = LoggingConfig(**(data.get("logging") or {}))
+        mcp = data.get("mcp")
+        checkpoints = data.get("checkpoints")
+        security = data.get("security")
         return cls(
             model=model,
             memory=memory,
@@ -120,6 +133,9 @@ class Config:
             auxiliary=auxiliary,
             timezone=data.get("timezone"),
             logging=logging_cfg,
+            mcp=mcp if isinstance(mcp, dict) else {},
+            checkpoints=checkpoints if isinstance(checkpoints, dict) else {},
+            security=security if isinstance(security, dict) else {},
         )
 
 

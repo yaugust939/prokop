@@ -55,8 +55,9 @@ async def handle_function_call(
     требует одобрения (см. ``safety``), вызывается ``approval``; отказ
     превращается в ошибку.
     """
+    from prokop.security.audit import get_audit
+    from prokop.security.policy import Decision, get_policy
     from prokop.tools.coercion import coerce_arguments
-    from prokop.tools.safety import classify_command, ApprovalDecision
 
     reg = registry or get_registry()
     tool = reg.get(name)
@@ -66,10 +67,11 @@ async def handle_function_call(
     args = coerce_arguments(args, tool.openai_schema()["function"]["parameters"])
 
     if name == "run_command" and isinstance(args.get("command"), str):
-        decision = classify_command(args["command"])
-        if decision is ApprovalDecision.BLOCKED:
-            return _format_error("команда в жёстком блок-листе и не выполняется", 2000)
-        if decision is ApprovalDecision.NEEDS_APPROVAL:
+        decision = get_policy().check_command(args["command"])
+        get_audit().record(decision, source=f"tool:{name}")
+        if decision.decision is Decision.DENY:
+            return _format_error(f"команда запрещена политикой: {decision.reason}", 2000)
+        if decision.decision is Decision.ASK:
             if approval is None or not await approval(name, args["command"]):
                 return _format_error("команда не одобрена пользователем", 2000)
 

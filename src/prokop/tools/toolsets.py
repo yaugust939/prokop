@@ -57,6 +57,18 @@ DEFAULT_TOOLSETS: dict[str, Toolset] = {
         includes=["core"],
         tools=["computer_use"],
     ),
+    #: Инструменты внешних MCP-серверов. Список наполняется в рантайме
+    #: (`prokop.mcp.runtime`), когда серверы подключены и доступны.
+    "mcp": Toolset(
+        name="mcp",
+        description="Инструменты внешних MCP-серверов.",
+        tools=[],
+    ),
+    "checkpoints": Toolset(
+        name="checkpoints",
+        description="Снимки состояния и откат.",
+        tools=["checkpoint"],
+    ),
 }
 
 

@@ -1,28 +1,14 @@
-"""Настройка логирования ядра."""
+"""Настройка логирования ядра — реэкспорт из :mod:`prokop.log`.
+
+Модуль сохранён как тонкая совместимая обёртка: единая реализация живёт в
+``prokop/log.py``, чтобы конфигурация логгера не расходилась между модулями.
+"""
 
 from __future__ import annotations
 
-import logging
-import sys
+from .log import configure, get_logger
 
+#: Корневой логгер ядра.
 LOGGER_NAME = "prokop"
 
-
-def get_logger(name: str | None = None) -> logging.Logger:
-    """Логгер внутри пространства имён ``prokop``."""
-    if name:
-        return logging.getLogger(f"{LOGGER_NAME}.{name}")
-    return logging.getLogger(LOGGER_NAME)
-
-
-def configure(level: str = "INFO", stream=sys.stderr) -> logging.Logger:
-    """Инициализировать логирование (идемпотентно)."""
-    logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-    if not logger.handlers:
-        handler = logging.StreamHandler(stream)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
-        )
-        logger.addHandler(handler)
-    return logger
+__all__ = ["LOGGER_NAME", "configure", "get_logger"]

@@ -13,7 +13,7 @@ import re
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional
 
 from prokop.backends.base import TerminalBackend
 from prokop.backends.errors import InfrastructureError
@@ -26,6 +26,34 @@ from prokop.backends.result import (
 from prokop.backends.snapshot import SessionSnapshot, DEFAULT_EXCLUDED_VARS
 
 DEFAULT_TIMEOUT = 120.0
+
+#: Переменные, включающие UTF-8-режим вывода у дочернего процесса.
+UTF8_ENV: dict[str, str] = {"PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+
+#: Кодировка вывода команд: не зависит от локали платформы.
+OUTPUT_ENCODING = "utf-8"
+
+
+def _child_env(
+    ambient: Optional[Mapping[str, str]] = None,
+    *overrides: Optional[Mapping[str, str]],
+) -> dict[str, str]:
+    """Собрать окружение дочернего процесса.
+
+    Порядок приоритетов:
+
+    1. окружение процесса (``ambient``);
+    2. UTF-8-режим вывода — перекрывает окружение процесса, чтобы результат
+       не зависел от локали и переменных машины;
+    3. явные слои вызывающего кода (аргумент команды, снимок сессии) — их
+       значения важнее, они не перезаписываются.
+    """
+    merged: dict[str, str] = dict(ambient or {})
+    merged.update(UTF8_ENV)
+    for layer in overrides:
+        if layer:
+            merged.update(layer)
+    return merged
 
 #: Разбор присваиваний переменных окружения для персистентности.
 _EXPORT_RE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.+)$")
@@ -86,11 +114,8 @@ class LocalBackend(TerminalBackend):
             return CommandResult(exit_code=0)
 
         use_cwd = cwd or str(self._cwd)
-        base_env = dict(os.environ)
-        if env:
-            base_env.update(env)
         # Переменные снимка переживают спавны: вливаются в каждую команду.
-        base_env.update(self.snapshot.as_env())
+        base_env = _child_env(os.environ, env, self.snapshot.as_env())
 
         try:
             proc = subprocess.Popen(
@@ -101,6 +126,8 @@ class LocalBackend(TerminalBackend):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                encoding=OUTPUT_ENCODING,
+                errors="replace",
                 start_new_session=(os.name != "nt"),
             )
         except OSError as exc:
@@ -169,15 +196,15 @@ class LocalBackend(TerminalBackend):
         try:
             if os.name == "nt":
                 subprocess.run(
-                    f"taskkill /F /T /PID {proc.pid}",
-                    shell=True,
+                    ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
             else:
                 import signal
 
-                os.killpg(proc.pid, signal.SIGKILL)
+                sig = getattr(signal, "SIGKILL", signal.SIGTERM)
+                os.killpg(os.getpgid(proc.pid), sig)
         except (OSError, ProcessLookupError):
             pass
         finally:

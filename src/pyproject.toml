@@ -1,21 +1,30 @@
 [project]
 name = "prokop"
 version = "0.1.0"
-description = "prokop — ядро универсального агента (по спецификации OpenSpec)"
+description = "prokop — ядро универсального агента (реализация по поведенческой спецификации OpenSpec)"
 requires-python = ">=3.11"
 dependencies = [
     "httpx>=0.27",
     "PyYAML>=6.0",
 ]
 
+[project.scripts]
+prokop = "prokop.cli.main:main"
+
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Локальный десктоп-бэкенд GUI (mss + Pillow — кросс-платформенные;
+# pyautogui/pywinauto подключаются только на Windows, где реализован
+# prokop.computer.windows). На прочих платформах используйте cua-driver.
 gui = [
     "mss>=9.0,<10",
-    "pyautogui>=0.9.54,<0.10",
-    "pywinauto>=0.6,<0.7",
     "Pillow>=10.0,<11",
+    "pyautogui>=0.9.54,<0.10; sys_platform == 'win32'",
+    "pywinauto>=0.6,<0.7; sys_platform == 'win32'",
 ]
+# Интерактивный терминальный интерфейс (`prokop tui`). Опционален: без него
+# команда сообщает, как установить extra, и предлагает `prokop chat`.
+tui = ["prompt_toolkit>=3.0,<4"]
 
 [build-system]
 requires = ["setuptools>=68"]
