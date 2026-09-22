@@ -1,36 +1,26 @@
-"""Единый резолвер домашнего каталога профиля.
+"""Пути состояния профиля — тонкий слой над ``prokop.home``.
 
-Все файловые пути ядра (база данных, конфиг, логи, пользовательские
-провайдеры) резолвятся через одну точку входа — функции этого модуля.
-Никакой модуль ядра не должен жёстко прописывать абсолютные пути.
+Единственный источник истины о расположении состояния — модуль
+:mod:`prokop.home` (``PROKOP_HOME`` или ``~/.prokop``; профиль —
+``PROKOP_PROFILE`` или ``default``). Здесь живут только именованные
+подкаталоги и файлы профиля (логи, база сессий, провайдеры).
 
-Правило разрешения базы домашних каталогов (первый подходящий выигрывает):
-
-1. переменная окружения ``PROKOP_HOME``;
-2. системный каталог данных текущей платформы:
-   - Windows — ``%LOCALAPPDATA%\\AgentCore``;
-   - macOS — ``~/Library/Application Support/AgentCore``;
-   - прочие POSIX — ``$XDG_DATA_HOME/prokop`` или ``~/.local/share/prokop``.
-
-Профиль изолирует состояние: каталог профиля — это подкаталог базы
-(``profiles/<имя>``), поэтому «несколько профилей» пишутся в собственные
-домашние каталоги без пересечения.
+Модуль намеренно **не знает о платформе**: раскладка каталогов одинакова на
+Windows, macOS и Linux. Различия окружения задаются переменной
+``PROKOP_HOME``, а не ветвлением по операционной системе.
 """
 
 from __future__ import annotations
 
-import os
-import sys
 from pathlib import Path
 
-#: Имя профиля по умолчанию.
-DEFAULT_PROFILE = "default"
+from . import home
+
+#: Имя профиля по умолчанию (реэкспорт из ``home``).
+DEFAULT_PROFILE = home.DEFAULT_PROFILE
 
 #: Переменная окружения, переопределяющая базу домашних каталогов.
-ENV_HOME = "PROKOP_HOME"
-
-#: Имя подкаталога профиля внутри базы домашних каталогов.
-_PROFILES_DIR = "profiles"
+ENV_HOME = home.ENV_HOME
 
 #: Имя подкаталога с пользовательскими провайдерами (YAML/Python).
 PROVIDERS_DIR = "providers"
@@ -45,30 +35,9 @@ LOGS_DIR = "logs"
 DATABASE_NAME = "sessions.db"
 
 
-def _system_data_base() -> Path:
-    """Возвращает системный каталог данных для данного приложения."""
-    if sys.platform == "win32":
-        root = os.environ.get("LOCALAPPDATA")
-        if root:
-            return Path(root) / "AgentCore"
-        root = os.environ.get("APPDATA")
-        if root:
-            return Path(root) / "AgentCore"
-        return Path.home() / "AppData" / "Local" / "AgentCore"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "AgentCore"
-    xdg = os.environ.get("XDG_DATA_HOME")
-    if xdg:
-        return Path(xdg) / "prokop"
-    return Path.home() / ".local" / "share" / "prokop"
-
-
 def resolve_base() -> Path:
     """Возвращает базу домашних каталогов (без профиля)."""
-    override = os.environ.get(ENV_HOME)
-    if override:
-        return Path(override).expanduser()
-    return _system_data_base()
+    return home.root_dir()
 
 
 def resolve_home(profile: str | None = None) -> Path:
@@ -76,8 +45,8 @@ def resolve_home(profile: str | None = None) -> Path:
 
     Каталог не создаётся на диске — только вычисляется путь.
     """
-    name = profile or DEFAULT_PROFILE
-    return resolve_base() / _PROFILES_DIR / name
+    name = profile or home.profile_name()
+    return home.root_dir() / name
 
 
 def resolve_config_path(profile: str | None = None) -> Path:
@@ -112,9 +81,9 @@ def resolve_memory_providers_dir(profile: str | None = None) -> Path:
 
 def ensure_home(profile: str | None = None) -> Path:
     """Создаёт (при необходимости) и возвращает домашний каталог профиля."""
-    home = resolve_home(profile)
-    home.mkdir(parents=True, exist_ok=True)
-    return home
+    path = resolve_home(profile)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def ensure_logs_dir(profile: str | None = None) -> Path:

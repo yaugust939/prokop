@@ -131,3 +131,53 @@ def test_output_truncation_writes_dump(backend):
     assert dump.exists()
     # Полный вывод доступен в свалке.
     assert dump.read_text(encoding="utf-8").count("\n") > 100
+
+
+# --- кодировка вывода (не зависит от локали) -------------------------------
+
+
+def test_output_encoding_is_utf8_regardless_of_locale(backend):
+    """Кириллица из дочернего процесса не искажается локале-зависимым декодером."""
+    result = backend.run('python -c "print(\'преодолено\')"')
+    assert result.output.strip() == "преодолено"
+
+
+def test_output_encoding_survives_foreign_pythonioencoding(backend, monkeypatch):
+    """Результат не зависит от кодировки, заданной вызывающей стороной."""
+    monkeypatch.setenv("PYTHONIOENCODING", "utf-8")
+    result = backend.run('python -c "print(\'преодолено\')"')
+    assert result.output.strip() == "преодолено"
+
+    monkeypatch.setenv("PYTHONIOENCODING", "cp1251")
+    result = backend.run('python -c "print(\'преодолено\')"')
+    assert result.output.strip() == "преодолено"
+
+
+def test_child_env_keeps_caller_priority():
+    """Окружение процесса перекрывается, явные слои вызывающего кода — нет."""
+    from prokop.backends.local import _child_env
+
+    merged = _child_env(
+        {"A": "1", "PYTHONIOENCODING": "cp866"},
+        {"A": "2", "PYTHONUTF8": "0"},
+        {"A": "3"},
+    )
+    assert merged["A"] == "3"                      # приоритет снимка сессии
+    assert merged["PYTHONUTF8"] == "0"             # явное значение сохранено
+    assert merged["PYTHONIOENCODING"] == "utf-8"   # ambient перекрыт UTF-8-режимом
+
+
+def test_snapshot_value_overrides_utf8_default(backend):
+    backend.export_var("PYTHONIOENCODING", "utf-8")
+    result = backend.run('python -c "import os; print(os.environ.get(\'PYTHONIOENCODING\'))"')
+    assert result.output.strip() == "utf-8"
+
+
+def test_undecodable_bytes_do_not_break_command(backend):
+    """Нераскодируемые байты заменяются, команда не падает."""
+    script = (
+        'python -c "import sys; sys.stdout.buffer.write(b\'\\xff\\xfe broken\\n\')"'
+    )
+    result = backend.run(script)
+    assert result.exit_code == 0
+    assert "broken" in result.output
