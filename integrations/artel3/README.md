@@ -48,18 +48,55 @@ sudo systemctl daemon-reload && sudo systemctl restart artel3-fleet
 
 | Переменная | По умолчанию | Смысл |
 |---|---|---|
-| `ARTEL_PROKOP_ROLES` | `prokopiy` | роли на ядре prokop (пусто = выключено, все на прежнем `llm_call`) |
+| `ARTEL_PROKOP_ROLES` | `prokopiy` | роли на ядре prokop: `*` (все), список через запятую или пусто (выключено) |
 | `ARTEL_PROKOP_MODEL` | `deepseek-chat` | модель роли (совпадает с моделью раннера) |
 | `ARTEL_PROKOP_TIMEOUT` | `180` | таймаут HTTP до провайдера, секунд |
+| `ARTEL_PROKOP_FAIL_NOTE` | `3` | после скольких повторов падающего вызова добавить модели указание |
+| `ARTEL_PROKOP_FAIL_STOP` | `5` | после скольких повторов прервать ход |
 
 Переменные задаются в юните флота:
 
 ```bash
 sudo systemctl edit artel3-fleet.service
 # [Service]
-# Environment=ARTEL_PROKOP_ROLES=prokopiy
+# Environment=ARTEL_PROKOP_ROLES=*
 sudo systemctl restart artel3-fleet
 ```
+
+## Контейнерные роли
+
+Часть ролей (по `config/agents-containerized.json`) работает не во флоте, а
+отдельными контейнерами на образе `artel3/agent-base`. У них **свой, минимальный
+раннер** (`/app/os3-agent-runner.py`, ~227 строк, без инструментов), поэтому его
+нужно патчить отдельно.
+
+```bash
+CTX=/docker/artel3/build/agent
+
+# 1. Патч контейнерного раннера, адаптер и исходники ядра — в контекст сборки
+sudo python3 patch_container_runner.py $CTX/os3-agent-runner.py
+sudo cp /srv/projects/prokop/integrations/artel3/prokop_engine.py $CTX/
+sudo cp -r /srv/projects/prokop/src $CTX/prokop-src   # без .venv, tests, .env
+
+# 2. Образ поверх имеющегося (overlay — не зависит от egress к Docker Hub)
+sudo docker build -f $CTX/Dockerfile.prokop -t artel3/agent-base:3 $CTX
+
+# 3. Проверка образа до выката
+sudo docker run --rm -e ARTEL_PROKOP_ROLES='*' artel3/agent-base:3 python3 /app/prokop_engine.py
+
+# 4. Compose: новый образ + переменная в каждый сервис (генератором, не руками)
+cd /docker/artel3/compose
+sudo cp agents.generated.yml agents.generated.yml.bak-preprokop-$(date +%Y%m%d-%H%M%S)
+sudo env ARTEL_AGENT_IMAGE=artel3/agent-base:3 ARTEL_PROKOP_ROLES='*' \
+    python3 /docker/artel3/scripts/gen_agent_compose.py
+sudo docker compose -p artel3-agents -f agents.generated.yml up -d
+```
+
+Логи контейнерных ролей — в `docker logs artel3-agent-<роль>` (их stdout), а не
+в общий `/var/log/artel3-agents.log`.
+
+Откат контейнеров: `ARTEL_AGENT_IMAGE=artel3/agent-base:2 ARTEL_PROKOP_ROLES=`
+и повторный прогон генератора с `up -d`. Образ `:2` остаётся на месте.
 
 ## Отказобезопасность
 
@@ -67,6 +104,15 @@ sudo systemctl restart artel3-fleet
 сбой импорта, ошибка хода. Раннер в этом случае **откатывается на прежний
 `llm_call`**, поэтому роль не остаётся без ответа. Отключение — пустое значение
 `ARTEL_PROKOP_ROLES`.
+
+**Защита от зацикливания портирована.** Прежний харнесс останавливал агента,
+который повторяет один и тот же падающий вызов (в артели был случай: 86 вызовов
+инструментов и ни одной записи кода). В адаптере тот же учёт: после
+`ARTEL_PROKOP_FAIL_NOTE` (3) повторов одного падающего вызова в его результат
+добавляется указание не повторять вызов и собрать отчёт из имеющихся данных;
+после `ARTEL_PROKOP_FAIL_STOP` (5) ход прерывается через `TurnControl`, и задача
+завершается честным текстом «данные получить не удалось» с кодом ошибки — как
+результат, а не как падение (статус не уходит в `blocked`).
 
 ## Диагностика
 
