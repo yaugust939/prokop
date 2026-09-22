@@ -227,7 +227,7 @@ def run(
     logger(
         agent,
         f"prokop: ход завершён api_calls={result.api_calls} "
-        f"tools={len(result.messages)} failed={result.failed} символов={len(text)}",
+        f"messages={len(result.messages)} failed={result.failed} символов={len(text)}",
     )
     if not text:
         return None
