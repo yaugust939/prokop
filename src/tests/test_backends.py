@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pytest
 
+#: Интерпретатор текущего окружения: команды `python` на Linux нет.
+PYTHON = f'"{sys.executable}"'
+
 from prokop.backends.base import TerminalBackend
 from prokop.backends.config import BackendConfig, resolve_backend, backend_config_from_dict
 from prokop.backends.errors import InfrastructureError
@@ -91,26 +94,26 @@ def backend(tmp_path):
 
 
 def test_run_prints_output(backend):
-    result = backend.run('python -c "print(\'hello\')"')
+    result = backend.run(f'{PYTHON} -c "print(\'hello\')"')
     assert result.ok
     assert "hello" in result.output
 
 
 def test_run_nonzero_exit_code(backend):
-    result = backend.run('python -c "import sys; sys.exit(7)"')
+    result = backend.run(f'{PYTHON} -c "import sys; sys.exit(7)"')
     assert result.exit_code == 7
     assert not result.ok
 
 
 def test_run_timeout_marks_timed_out(backend):
-    result = backend.run('python -c "import time; time.sleep(30)"', timeout=0.5)
+    result = backend.run(f'{PYTHON} -c "import time; time.sleep(30)"', timeout=0.5)
     assert result.timed_out
     assert not result.ok
 
 
 def test_export_var_survives_spawns(backend):
     backend.export_var("MY_FLAG", "преодолено")
-    result = backend.run('python -c "import os; print(os.environ.get(\'MY_FLAG\'))"')
+    result = backend.run(f'{PYTHON} -c "import os; print(os.environ.get(\'MY_FLAG\'))"')
     assert "преодолено" in result.output
 
 
@@ -122,7 +125,7 @@ def test_cwd_tracking(backend, tmp_path):
 
 
 def test_output_truncation_writes_dump(backend):
-    script = 'python -c "import sys; [print(\'x\' * 80) for _ in range(10000)]"'
+    script = f'{PYTHON} -c "import sys; [print(\'x\' * 80) for _ in range(10000)]"'
     backend.max_output_chars = 500
     result = backend.run(script)
     assert result.truncated
@@ -138,18 +141,18 @@ def test_output_truncation_writes_dump(backend):
 
 def test_output_encoding_is_utf8_regardless_of_locale(backend):
     """Кириллица из дочернего процесса не искажается локале-зависимым декодером."""
-    result = backend.run('python -c "print(\'преодолено\')"')
+    result = backend.run(f'{PYTHON} -c "print(\'преодолено\')"')
     assert result.output.strip() == "преодолено"
 
 
 def test_output_encoding_survives_foreign_pythonioencoding(backend, monkeypatch):
     """Результат не зависит от кодировки, заданной вызывающей стороной."""
     monkeypatch.setenv("PYTHONIOENCODING", "utf-8")
-    result = backend.run('python -c "print(\'преодолено\')"')
+    result = backend.run(f'{PYTHON} -c "print(\'преодолено\')"')
     assert result.output.strip() == "преодолено"
 
     monkeypatch.setenv("PYTHONIOENCODING", "cp1251")
-    result = backend.run('python -c "print(\'преодолено\')"')
+    result = backend.run(f'{PYTHON} -c "print(\'преодолено\')"')
     assert result.output.strip() == "преодолено"
 
 
@@ -169,14 +172,14 @@ def test_child_env_keeps_caller_priority():
 
 def test_snapshot_value_overrides_utf8_default(backend):
     backend.export_var("PYTHONIOENCODING", "utf-8")
-    result = backend.run('python -c "import os; print(os.environ.get(\'PYTHONIOENCODING\'))"')
+    result = backend.run(f'{PYTHON} -c "import os; print(os.environ.get(\'PYTHONIOENCODING\'))"')
     assert result.output.strip() == "utf-8"
 
 
 def test_undecodable_bytes_do_not_break_command(backend):
     """Нераскодируемые байты заменяются, команда не падает."""
     script = (
-        'python -c "import sys; sys.stdout.buffer.write(b\'\\xff\\xfe broken\\n\')"'
+        f'{PYTHON} -c "import sys; sys.stdout.buffer.write(b\'\\xff\\xfe broken\\n\')"'
     )
     result = backend.run(script)
     assert result.exit_code == 0

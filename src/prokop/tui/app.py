@@ -90,17 +90,20 @@ def run_tui(
     Бросает :class:`CliError`, если недоступна зависимость, нет терминала или
     не разрешаются провайдер и ключ модели.
     """
+    # Порядок проверок: сначала терминал, потом зависимость. Без терминала
+    # TUI невозможен независимо от того, установлен ли prompt_toolkit, и
+    # подсказка про extra в этом случае вводила бы в заблуждение.
+    if not _is_tty(ctx.stdin):
+        raise CliError(
+            "TUI требует интерактивный терминал. "
+            "Для потокового ввода используйте `prokop chat`.",
+            EXIT_USAGE,
+        )
     if not prompt_toolkit_available():
         raise CliError(
             "TUI недоступен: не установлен prompt_toolkit. "
             f"Установите extra: {INSTALL_HINT}. "
             "Либо используйте линейный режим: prokop chat",
-            EXIT_USAGE,
-        )
-    if not _is_tty(ctx.stdin):
-        raise CliError(
-            "TUI требует интерактивный терминал. "
-            "Для потокового ввода используйте `prokop chat`.",
             EXIT_USAGE,
         )
 

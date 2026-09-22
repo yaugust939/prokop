@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 
 import pytest
 
+#: Интерпретатор текущего окружения: команды `python` на Linux нет.
+PYTHON = f'"{sys.executable}"'
+
 from prokop.cron.model import Job, JobError, validate_job, new_job_id
 from prokop.cron.schedule import (
     ScheduleKind,
@@ -145,7 +148,7 @@ def _script_job(home, script, *, delivery_target="локально", **kwargs):
 
 
 def test_ticker_executes_script_and_delivers(home):
-    store, job = _script_job(home, 'python -c "print(\'result\')"')
+    store, job = _script_job(home, f'{PYTHON} -c "print(\'result\')"')
     future = datetime.now() + timedelta(minutes=2)
     ticker = Ticker(store, home, now_fn=lambda: future)
     result = ticker.tick()
@@ -156,7 +159,7 @@ def test_ticker_executes_script_and_delivers(home):
 
 
 def test_ticker_silent_run_no_delivery(home):
-    store, job = _script_job(home, 'python -c "pass"')
+    store, job = _script_job(home, f'{PYTHON} -c "pass"')
     future = datetime.now() + timedelta(minutes=2)
     result = Ticker(store, home, now_fn=lambda: future).tick()
     assert job.id in result.quiet
@@ -164,7 +167,7 @@ def test_ticker_silent_run_no_delivery(home):
 
 
 def test_ticker_error_delivers_watchdog_message(home):
-    store, job = _script_job(home, 'python -c "import sys; sys.exit(3)"')
+    store, job = _script_job(home, f'{PYTHON} -c "import sys; sys.exit(3)"')
     future = datetime.now() + timedelta(minutes=2)
     result = Ticker(store, home, now_fn=lambda: future).tick()
     assert job.id in result.errors
@@ -175,7 +178,7 @@ def test_ticker_error_delivers_watchdog_message(home):
 
 def test_ticker_interval_catchup_consolidates(home):
     store = JobStore(home)
-    job = Job(id=new_job_id(), name="w", no_agent=True, script='python -c "pass"',
+    job = Job(id=new_job_id(), name="w", no_agent=True, script=f'{PYTHON} -c "pass"',
               schedule=parse_schedule("каждые 1м"), delivery_target="локально")
     job = add_job(store, job)
     # Пропущено много периодов — догон один, следующий запуск от «сейчас».
@@ -188,7 +191,7 @@ def test_ticker_interval_catchup_consolidates(home):
 
 def test_ticker_one_shot_grace_window(home):
     # Разовое пропущено дальше льготного окна — истекает, не исполняется.
-    store, job = _script_job(home, 'python -c "print(\'x\')"')
+    store, job = _script_job(home, f'{PYTHON} -c "print(\'x\')"')
     job.schedule = parse_schedule("1м")
     job.next_run = (datetime.now() - timedelta(seconds=GRACE_SECONDS + 60)).isoformat()
     store.upsert(job)
@@ -198,7 +201,7 @@ def test_ticker_one_shot_grace_window(home):
 
 
 def test_ticker_paused_skipped(home):
-    store, job = _script_job(home, 'python -c "print(\'x\')"', paused=True)
+    store, job = _script_job(home, f'{PYTHON} -c "print(\'x\')"', paused=True)
     future = datetime.now() + timedelta(minutes=2)
     result = Ticker(store, home, now_fn=lambda: future).tick()
     assert job.id in result.skipped_paused
@@ -206,7 +209,7 @@ def test_ticker_paused_skipped(home):
 
 
 def test_ticker_one_shot_completes(home):
-    store, job = _script_job(home, 'python -c "print(\'x\')"')
+    store, job = _script_job(home, f'{PYTHON} -c "print(\'x\')"')
     job.schedule = parse_schedule("1м")
     job.next_run = (datetime.now() - timedelta(seconds=1)).isoformat()
     store.upsert(job)
