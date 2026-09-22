@@ -25,10 +25,24 @@ sudo pip3 install --break-system-packages --no-deps -e /srv/projects/prokop/src
 
 # 2. Адаптер рядом с раннером
 sudo cp /srv/projects/prokop/integrations/artel3/prokop_engine.py /docker/artel3/scripts/
+
+# 3. Патч ОБОИХ модулей раннера (см. предупреждение ниже)
+sudo python3 patch_runner_prokop2.py \
+    /docker/artel3/scripts/os3-agent-runner.py \
+    /docker/artel3/scripts/os3_agent_runner_compat.py
+
+# 4. Явный переключатель и перезапуск
+sudo systemctl edit artel3-fleet.service     # Environment=ARTEL_PROKOP_ROLES=prokopiy
+sudo systemctl daemon-reload && sudo systemctl restart artel3-fleet
 ```
 
-Дальше раннер подхватывает его при старте (см. патч `execute()`), управление —
-переменной окружения `ARTEL_PROKOP_ROLES`.
+> **Важно: раннеров два.** `os3-agent-fleet.py` импортирует
+> `os3_agent_runner_compat.py`, а `os3-agent-runner.py` запускается внутри
+> контейнеров (`artel3/agent-base:2`, `CMD … os3-agent-runner.py`). Патчить
+> нужно **оба**: иначе флот продолжит работать прежним циклом (именно на этом
+> легко обмануться — патч «применён», а в логе нет строки `prokop:`).
+> Контейнерные роли (`adrian`, `analitik`, `kozma`, `pisar`) подхватят патч
+> только после пересборки образа `artel3/agent-base`.
 
 ## Управление
 
@@ -61,6 +75,16 @@ python3 /docker/artel3/scripts/prokop_engine.py   # установлено ли 
 journalctl -u artel3-fleet -n 50 | grep -i prokop
 grep -i 'prokop' /var/log/artel3-agents.log
 ```
+
+Признак того, что роль действительно идёт через ядро — строка в логе агентов:
+
+```
+agt_agent:prokopiy: prokop: ход завершён api_calls=1 messages=2 failed=False символов=46
+```
+
+Если её нет, а задача выполнена — работает откат на прежний `llm_call`
+(проверьте `ARTEL_PROKOP_ROLES`, наличие `prokop` для системного Python и
+патч обоих модулей раннера).
 
 ## Откат
 
