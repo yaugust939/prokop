@@ -139,27 +139,34 @@ memory:
 
 ## Адаптеры платформ
 
-`gateway/telegram.py` — реализация контракта адаптера поверх HTTP Bot API
-(`httpx`, без новых зависимостей): подключение с проверкой токена, отправка с
-разбиением по лимиту платформы, индикатор набора, информация о чате, отправка
-файлов. Входящие обновления нормализуются в событие гейтвея, обновления
-забираются длинным опросом:
+Реализованы два адаптера поверх HTTP-API платформ (`httpx`, без новых
+зависимостей): **Telegram** (`gateway/telegram.py`) и **MAX**
+(`gateway/max.py`) — российский мессенджер, для которого у ядра есть
+полноценная реализация контракта.
+
+Общее: подключение с проверкой токена, отправка с разбиением по лимиту
+платформы, индикатор набора, информация о чате, отправка файлов, длинный опрос
+и нормализация входящих в событие гейтвея; ошибки платформы отображаются в
+категории контракта (`auth`, `rate_limit`, `transient`, `network`, `invalid`).
 
 ```python
-from prokop.gateway.telegram import TelegramAdapter
+from prokop.gateway.max import MaxAdapter          # или gateway.telegram
 from prokop.gateway.engine import Gateway
 
-adapter = TelegramAdapter(token="123:ABC")
-await adapter.connect()                       # getMe
-updates = await adapter.get_updates(offset=None, timeout=25)
-event = adapter.normalize(updates[0])         # → InboundEvent
-result = await Gateway(run_turn).handle(event)  # авторизация, ход, ответ
-await adapter.send_text(event.source.chat_id, result.text or "")
+adapter = MaxAdapter(token="<access_token>")
+await adapter.connect()                            # GET /me
+updates = await adapter.get_updates(timeout=25)    # указатель marker — внутри
+event = adapter.normalize(updates[0])              # → InboundEvent
+if event is not None:
+    result = await Gateway(run_turn).handle(event)
+    await adapter.send_text(event.source.chat_id, result.text or "")
 ```
 
-Ошибки платформы отображаются в категории контракта (`auth`, `rate_limit`,
-`transient`, `network`, `invalid`) — по ним осмысленно решается вопрос
-повторов.
+Особенности MAX, учтённые в адаптере: база `platform-api2.max.ru`, авторизация
+заголовком `Authorization`; указатель длинного опроса `marker`; идентификатор
+сообщения — строка; адресация получателя `chat_id` (чат/канал) или `user:<id>`
+(диалог); действие «набор текста» доступно только в групповых чатах; медиа
+загружается в два шага (`POST /uploads` → загрузка → токен вложения).
 
 ## Политики безопасности
 
@@ -267,7 +274,7 @@ cd src
 python -m pytest tests -q
 ```
 
-На момент публикации — **481 тестов**, все зелёные.
+На момент публикации — **537 тестов**, все зелёные.
 
 ## Спецификация
 

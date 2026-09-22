@@ -23,6 +23,7 @@ from prokop.gateway.adapters import (
     PlatformAdapter,
     SendError,
     SendResult,
+    split_text,
 )
 from prokop.gateway.events import Author, InboundEvent, MessageType, Source
 from prokop.logging_setup import get_logger
@@ -65,38 +66,6 @@ def error_category(status: int) -> ErrorCategory:
     if 400 <= status < 500:
         return ErrorCategory.INVALID
     return ErrorCategory.UNKNOWN
-
-
-def split_text(text: str, limit: int) -> list[str]:
-    """Разбить текст на части не длиннее лимита.
-
-    По возможности режем по границе строки, затем по пробелу; если границы нет
-    — жёстко по лимиту. Пустой текст даёт пустой список.
-    """
-    text = text or ""
-    if not text:
-        return []
-    if limit <= 0 or len(text) <= limit:
-        return [text]
-
-    parts: list[str] = []
-    remaining = text
-    while len(remaining) > limit:
-        window = remaining[:limit]
-        cut = window.rfind("\n")
-        if cut < limit // 2:
-            cut = window.rfind(" ")
-        if cut < limit // 2:
-            cut = limit
-        part = remaining[:cut].strip()
-        if not part:
-            cut = limit
-            part = remaining[:cut]
-        parts.append(part)
-        remaining = remaining[cut:].lstrip("\n")
-    if remaining.strip():
-        parts.append(remaining.strip())
-    return parts
 
 
 def _safe_json(response: httpx.Response) -> dict[str, Any]:

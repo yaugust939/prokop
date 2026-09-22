@@ -258,13 +258,13 @@ prokop memory forget стек
 Неизвестное имя провайдера в конфигурации даёт предупреждение в лог и
 оставляет встроенную память: опечатка не ломает запуск.
 
-### Адаптер платформы (Telegram)
+### Адаптер платформы (Telegram и MAX)
 ```python
 from prokop.gateway.engine import Gateway
-from prokop.gateway.telegram import TelegramAdapter
+from prokop.gateway.telegram import TelegramAdapter   # или gateway.max.MaxAdapter
 
 adapter = TelegramAdapter(token="123:ABC")
-await adapter.connect()                            # getMe: проверка токена
+await adapter.connect()                            # getMe
 updates = await adapter.get_updates(offset, timeout=25)
 
 event = adapter.normalize(updates[0])              # → InboundEvent
@@ -284,6 +284,40 @@ await adapter.disconnect()
 `rate_limit` (429), `transient` (5xx), `network` (сбои связи), `invalid`
 (400). По `is_retryable` решается вопрос повторов. `send_text` не поднимает
 исключений — сбой возвращается результатом.
+
+#### MAX (российский мессенджер)
+```python
+from prokop.gateway.max import MaxAdapter
+
+adapter = MaxAdapter(token="<access_token>")   # токен бота с business.max.ru
+await adapter.connect()                        # GET /me
+updates = await adapter.get_updates(timeout=25, limit=100)
+# указатель продолжения живёт в адаптере: adapter.marker
+```
+
+Отличия от Telegram, которые важно помнить:
+
+| Аспект | MAX |
+|---|---|
+| База | `https://platform-api2.max.ru` (не `platform-api.max.ru`) |
+| Авторизация | заголовок `Authorization: <access_token>` (query-параметр не поддерживается) |
+| Лимиты | 30 rps на API; не более 2 сообщений в секунду в один чат |
+| Текст | до 4000 символов |
+| Идентификатор сообщения | **строка** (`mid`) |
+| Адресация | `chat_id` для чата/канала, `user_id` для пользователя |
+| Индикатор набора | `POST /chats/{chatId}/actions`, **только групповые чаты** |
+| Обновления | `GET /updates` с указателем `marker` |
+| Медиа | два шага: `POST /uploads` → загрузка по ссылке → токен вложения |
+
+Для отправки в личный диалог передайте получателя с префиксом:
+`adapter.send_text("user:123456789", "привет")` — тогда запрос уйдёт с
+`user_id` вместо `chat_id`. Обычный идентификатор (тот, что приходит в событии)
+используется как `chat_id`.
+
+Длинный опрос MAX платформа рекомендует только для разработки и тестирования
+(ограничен по скорости и сроку хранения событий); для production —
+вебхуки `POST /subscriptions` (требуют публичный HTTPS и сертификат из
+доверенных, включая Минцифры).
 
 ### Терминальный интерфейс (TUI)
 ```bash
@@ -386,7 +420,7 @@ print(b.run("echo hello && pwd").output)
 ## 6. Тесты
 ```bash
 cd src
-python -m pytest tests -q        # 481 тестов
+python -m pytest tests -q        # 537 тестов
 ```
 
 ## 7. Устранение неполадок
