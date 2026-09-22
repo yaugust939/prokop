@@ -36,54 +36,68 @@ security. Сессия 2 (8d978e0) — файловая память, адапт
 
 ## Осталось
 
-- [ ] P0 · hermes · Переключить Прокопия на наш prokop: подключить `ProkopEngine` за швом `AgentEngine` в copilot-v2 (ADR 0003) (#31)
-- [ ] P0 · hermes · P0-1 спеки артели: structured output (`response_format`) в транспорте prokop (#32)
-- [ ] P0 · hermes · P0-2 спеки артели: vision-хелпер `build_multimodal_message` (только user-сообщения) (#33)
-- [ ] P0 · hermes · P0-3 спеки артели: резолвер role→model и передача в spawn_fn субагентов (#34)
-- [ ] P2 · hermes · P0-4/P0-5: изоляция реестра (готово механизмом) и конфиг без глобалов (#35)
+- [ ] P2 · hermes · Пересобрать образ `artel3/agent-base`, чтобы патч получили контейнерные роли (adrian, analitik, kozma, pisar) (#36)
 - [ ] P2 · hermes · Вебхуки MAX (#27), песочница (#18), остальные платформы (#19), orchestrator (#20)
+- [ ] P2 · hermes · copilot-v2: `ProkopEngine` за швом `AgentEngine` (ADR 0003) — отдельная задача, если понадобится (#31)
 
 ## Заметки
 
-### AI Artel: что найдено (VM AIRTEL, 192.168.0.60)
+### ✅ Переключение роли `prokopiy` на ядро prokop — выполнено
+
+Проверено **в бою** через продовую шину (задача `task.assigned` → SSE-инбокс →
+`execute()` → prokop → CRM + отчёт):
+
+```
+agt_agent:prokopiy: EXECUTE task smoke-prokop2-…: Проверка роли Прокопий на ядре prokop
+agt_agent:prokopiy: prokop: ход завершён api_calls=1 messages=2 failed=False символов=46
+agt_agent:prokopiy: LLM result: Ядро prokop на связи, друже — Прокопий у руля.
+agt_agent:prokopiy: report: полный текст сохранён (…/vault/prokopiy/reports/…)
+agt_agent:prokopiy: COMPLETED task smoke-prokop2-…
+```
+
+Ответ с характером Прокопия («друже») — персона передана в `identity` ядра.
+Откат не потребовался (строка `prokop:` есть — значит ядро, а не прежний цикл).
+
+**Что сделано:**
+- prokop установлен для системного Python (`pip --break-system-packages -e
+  /srv/projects/prokop/src`), CLI доступен как `/usr/local/bin/prokop`;
+- адаптер `integrations/artel3/prokop_engine.py` (в нашем репо) — мозг роли на
+  `AgentTurn`: тот же персонаж, память и инструменты, но цикл и бюджеты из ядра;
+- инструменты не менялись: схемы от раннера, вызовы в его же `call_tool`;
+- пропатчены **оба** модуля раннера (`os3-agent-runner.py` и
+  `os3_agent_runner_compat.py`) — флот импортирует второй; бэкапы рядом;
+- переключатель `ARTEL_PROKOP_ROLES=prokopiy` в drop-in юнита
+  `artel3-fleet.service.d/prokop.conf`; пустое значение = полный откат;
+- отказобезопасность проверена: при неверном ключе prokop вернул None, раннер
+  автоматически откатился на прежний `llm_call`.
+
+**Контроль:** `marfa`, `webmaster`, `yadro`, `seo` — по-прежнему на `llm_call`;
+флот активен, ошибок за сессию нет.
+
+### ⚠️ Найдено при развёртывании
+
+Раннеров **два**: флот импортирует `os3_agent_runner_compat.py`, а
+`os3-agent-runner.py` запускается внутри образа `artel3/agent-base:2`. Патч
+только второго выглядит успешным, но флот продолжает работать прежним циклом
+(задача выполняется, строки `prokop:` в логе нет). Зафиксировано в README.
+
+### AI Artel: разведка (VM AIRTEL, 192.168.0.60)
 
 - **Стек OS3** — `/docker/artel3`: реестр `config/agents.json` (66 ролей),
   классы `config/agent-classes.json`, секреты `secrets/<role>.env`, vault по роли.
-  В реестре есть роль **`prokopiy` — «Прокопий (Оркестрация)»**; в MAX-боте
-  `id5118006623_bot` → prokopiy.
-- **Мозг флота** — `/docker/artel3/scripts/os3-agent-runner.py`: собственный цикл
-  на DeepSeek (`llm_call`), не Hermes. Рантайм-образ `artel3/agent-base:2`
-  (`python3 /app/os3-agent-runner.py --agent … --role … --key …`).
-- **Установленного Hermes Agent на сервере нет**: единственные упоминания —
-  `vault/hermes` (там персонаж Марфы), `benchmark_hermes` (сравнение
-  PROKOP/Hermes/OpenClaw), `.env.bak-prehermes` и старый контейнер
-  `artel3-agent-hermes` в бэкапе миграции.
-- **`copilot-v2`** (`/srv/projects/copilot-v2`, bare `/srv/git/copilot-v2.git`) —
-  «Копилот Декларанта V.2». По ADR 0003 и спецификации (раздел 6) ассистент-движком
-  должен стать **наш prokop** через шов `AgentEngine` → `ProkopEngine`; сейчас
-  стоит `BuiltinEngine`. Причина отложения (HISTORY): «Прокопий несёт
-  Windows-специфику (`backends/local.py`, `computer/windows.py`) и глобальные
-  синглтоны».
-- **Эта причина устранена** — кроссплатформенность вычищена и подтверждена зелёным
-  прогоном на самой VM AIRTEL (Linux, Python 3.12).
+  Роль **`prokopiy` — «Прокопий (Оркестрация)»**; в MAX-боте `id5118006623_bot`.
+- **Мозг флота** — свой раннер на DeepSeek (`llm_call`), образ
+  `artel3/agent-base:2`. **Установленного Hermes Agent на сервере нет**:
+  следы — `vault/hermes` (персонаж Марфы), `benchmark_hermes`, `.env.bak-prehermes`.
+- **`copilot-v2`** — «Копилот Декларанта V.2»; по ADR 0003 ассистент-движком
+  должен стать наш prokop через шов `AgentEngine` → `ProkopEngine`. Причина
+  отложения — «Windows-специфика и глобальные синглтоны» — **устранена** нашим
+  аудитом и подтверждена зелёным прогоном на этой же VM.
 
-### Что дал первый прогон на Linux (ценность)
+### Что дал первый прогон на Linux
 
-537 тестов: локально (Windows) зелёные, на сервере **14 падений**. Причины:
-
-1. 11 тестов запускали литерал `python` — на Linux есть только `python3`.
-   Исправлено: `sys.executable` (`df34be0`).
-2. 3 теста TUI: в `run_tui` проверка зависимости шла раньше проверки терминала —
-   в pipe без `prompt_toolkit` пользователю предлагали поставить extra вместо
-   сообщения об отсутствии терминала. Порядок исправлен (`df34be0`).
-3. 1 тест ключа TUI зависел от установленного extra. Исправлено (`e163cd8`).
-
-Итог: **537 passed на Windows и на Linux**. Развёрнутая копия:
-`/srv/projects/prokop` (venv `.venv`, `pip install -e src`), CLI работает
-(`prokop --version`, `prokop doctor`).
-
-### Открытый вопрос
-
-Что именно имелось в виду под «Прокопий, который в артели hermes agent»:
-шов `ProkopEngine` в copilot-v2 (по ADR 0003 — да, это он) или замена харнесса
-роли `prokopiy` в OS3-флоте. На сервере Hermes-рантайма не найдено.
+537 тестов: локально (Windows) зелёные, на сервере **14 падений**. Причины и
+исправления (коммиты `df34be0`, `e163cd8`): тесты запускали литерал `python`
+(на Linux только `python3`) → `sys.executable`; в `run_tui` проверка зависимости
+шла раньше проверки терминала → порядок исправлен; один тест TUI зависел от
+установленного extra. Итог: **537 passed и на Windows, и на Linux**.
