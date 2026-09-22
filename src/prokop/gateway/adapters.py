@@ -82,6 +82,39 @@ class SendError(Exception):
     """Исключение, пробрасываемое адаптером при критическом сбое отправки."""
 
 
+def split_text(text: str, limit: int) -> list[str]:
+    """Разбить текст на части не длиннее лимита платформы.
+
+    Общая утилита адаптеров: по возможности режем по границе строки, затем по
+    пробелу; если границы нет — жёстко по лимиту. Пустой текст даёт пустой
+    список.
+    """
+    text = text or ""
+    if not text:
+        return []
+    if limit <= 0 or len(text) <= limit:
+        return [text]
+
+    parts: list[str] = []
+    remaining = text
+    while len(remaining) > limit:
+        window = remaining[:limit]
+        cut = window.rfind("\n")
+        if cut < limit // 2:
+            cut = window.rfind(" ")
+        if cut < limit // 2:
+            cut = limit
+        part = remaining[:cut].strip()
+        if not part:
+            cut = limit
+            part = remaining[:cut]
+        parts.append(part)
+        remaining = remaining[cut:].lstrip("\n")
+    if remaining.strip():
+        parts.append(remaining.strip())
+    return parts
+
+
 class PlatformAdapter(ABC):
     """Абстрактный контракт адаптера платформы обмена сообщениями."""
 
