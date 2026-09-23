@@ -3,6 +3,8 @@
 [![tests](https://github.com/yaugust939/prokop/actions/workflows/tests.yml/badge.svg)](https://github.com/yaugust939/prokop/actions/workflows/tests.yml)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+![prokop — универсальное ядро агента](docs/assets/prokop.png)
+
 **prokop** — ядро универсального агента: цикл хода, инструменты, навыки, память,
 хранилище сессий, слой модельных провайдеров и обвес (планировщик, субагенты,
 терминальные бэкенды, гейтвей). Реализовано по поведенческой спецификации
