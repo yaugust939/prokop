@@ -16,21 +16,18 @@
   <use href="#m" x="6.5"  y="1.5"/>
   <use href="#m" x="9.5"  y="2.5"/>
   <use href="#m" x="10.5" y="3.5"/>
-  <use href="#m" x="6.5" y="3.5"/>
-  <use href="#m" x="6.5" y="4.5"/>
-  <use href="#m" x="6.5" y="5.5"/>
-  <use href="#m" x="6.5" y="6.5"/>
-  <use href="#m" x="6.5" y="7.5"/>
-  <use href="#m" x="6.5" y="8.5"/>
-  <use href="#m" x="6.5" y="9.5"/>
+  <use href="#m" x="4.5" y="4.5"/>
   <use href="#m" x="5.5" y="4.5"/>
+  <use href="#m" x="6.5" y="4.5"/>
   <use href="#m" x="7.5" y="4.5"/>
-  <use href="#m" x="3.5" y="6.5"/>
+  <use href="#m" x="8.5" y="4.5"/>
+  <use href="#m" x="4.5" y="5.5"/>
+  <use href="#m" x="8.5" y="5.5"/>
   <use href="#m" x="4.5" y="6.5"/>
-  <use href="#m" x="5.5" y="6.5"/>
-  <use href="#m" x="7.5" y="6.5"/>
   <use href="#m" x="8.5" y="6.5"/>
-  <use href="#m" x="9.5" y="6.5"/>
-  <rect x="4.3" y="8" width="4.4" height="1" rx="0.14" transform="rotate(-19.3 6.5 8.5)"/>
+  <use href="#m" x="4.5" y="7.5"/>
+  <use href="#m" x="8.5" y="7.5"/>
+  <use href="#m" x="4.5" y="8.5"/>
+  <use href="#m" x="8.5" y="8.5"/>
 </g>
 </svg>

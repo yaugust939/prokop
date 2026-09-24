@@ -510,7 +510,9 @@ h2 { margin-bottom: var(--sp-6); }
   gap: var(--sp-6);
 }
 
-.foot-logo { width: 120px; height: 31px; }
+/* Высота локапа = высота знака: при 50:13 это 123px ширины. Прежние 120×31 давали
+   знак 31px, а ниже 32px кольцо из двенадцати модулей перестаёт читаться. */
+.foot-logo { width: 123px; height: 32px; }
 
 .foot-meta {
   display: flex;
