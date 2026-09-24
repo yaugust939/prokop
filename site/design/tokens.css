@@ -1,0 +1,378 @@
+/* ==========================================================================
+   PROKOP — дизайн-система. Источник истины.
+   Тёмная тема по умолчанию (ЭЛТ-лампада), светлая — тёплая бумага.
+   Палитра названа по пигментам старопечатной книги и меднолитой иконы.
+   Шрифты локальные, без внешних CDN. Ни одного внешнего запроса.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   ШРИФТЫ
+   Fedorovsk (заставки, буквица, заголовки) + Handjet (модульный слой)
+   + Golos Text (текст) + JetBrains Mono (код). Кириллица у всех.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Fedorovsk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/fedorovsk-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+0490-0491, U+04B0-04B1, U+2116, U+1C80-1C8A, U+2DE0-2DFF, U+A640-A69F;
+}
+@font-face {
+  font-family: 'Fedorovsk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/fedorovsk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-2193, U+2212;
+}
+
+@font-face {
+  font-family: 'Handjet';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/handjet-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Handjet';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/handjet-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Handjet';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/handjet-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+2190-2193, U+2212;
+}
+
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/golos-text-cyrillic-400.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/golos-text-cyrillic-600.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/golos-text-latin-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+}
+@font-face {
+  font-family: 'Golos Text';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('fonts/golos-text-latin-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/jetbrains-mono-cyrillic-400.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/jetbrains-mono-cyrillic-700.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-2193, U+2212;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/jetbrains-mono-latin-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-2193, U+2212;
+}
+
+/* --------------------------------------------------------------------------
+   ПАЛИТРА ПИГМЕНТОВ
+   «Неон» — тот же пигмент, увиденный на ЭЛТ.
+   Тона 300 / 500 / 700: светлый для тёмного фона, основной для заливок,
+   тёмный для мелкого текста на бумаге. Разделение обязательно — контрасты
+   киновари и яри в среднем тоне не дотягивают до 4.5:1 на обоих фонах.
+   -------------------------------------------------------------------------- */
+:root {
+  /* сажа и дёготь — фон и поверхности */
+  --p-soot-900: #0B0A09;
+  --p-soot-800: #141210;
+  --p-soot-700: #1D1A17;
+  --p-soot-600: #2A2622;
+  --p-soot-500: #3B3530;
+
+  /* поновление — тёплая бумага, не белый */
+  --p-paper-50:  #F4EDDD;
+  --p-paper-100: #E7DCC6;
+  --p-paper-200: #D3C4A8;
+
+  /* киноварь — главный акцент */
+  --p-cinnabar-300: #F2705C;
+  --p-cinnabar-500: #D8382B;
+  --p-cinnabar-700: #B02A20;
+
+  /* ярь-медянка — второй акцент */
+  --p-verdigris-300: #57D9B4;
+  --p-verdigris-500: #2F9E82;
+  --p-verdigris-700: #1F6E5A;
+
+  /* сусаль — золото книги */
+  --p-gold-300: #E0A75C;
+  --p-gold-500: #C8873C;
+  --p-gold-700: #7A4E14;
+
+  /* крутик — лазорь, редкий акцент и ссылки */
+  --p-ultramarine-300: #6B8FE0;
+  --p-ultramarine-500: #2B4C8C;
+
+  /* медь — тёплый нейтральный, линии */
+  --p-copper-500: #9A5B3B;
+  --p-copper-300: #C48A6A;
+}
+
+/* --------------------------------------------------------------------------
+   СЕМАНТИЧЕСКИЕ РОЛИ. Компоненты используют только их, не сырые шкалы.
+   По умолчанию — тёмная тема.
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: var(--p-soot-900);
+  --bg-subtle: var(--p-soot-800);
+  --surface: var(--p-soot-800);
+  --surface-2: var(--p-soot-700);
+  --border: var(--p-soot-600);
+  --border-strong: var(--p-soot-500);
+
+  --text: var(--p-paper-50);
+  --text-2: var(--p-paper-100);
+  --muted: #A99C86;
+
+  /* акценты: заливки отдельно, текст отдельно */
+  --accent: var(--p-cinnabar-500);
+  --accent-text: var(--p-cinnabar-300);
+  --accent-2: var(--p-verdigris-500);
+  --accent-2-text: var(--p-verdigris-300);
+  --gold: var(--p-gold-500);
+  --gold-text: var(--p-gold-300);
+  --link: var(--p-ultramarine-300);
+
+  --on-accent: var(--p-paper-50);
+  --on-gold: var(--p-soot-900);
+
+  /* состояния */
+  --focus-ring: var(--p-verdigris-300);
+  --ok: var(--p-verdigris-300);
+  --warn: var(--p-gold-300);
+  --danger: var(--p-cinnabar-300);
+
+  /* свечение ЭЛТ — только фон, никогда под смысловым текстом */
+  --glow-accent: 0 0 24px rgba(216, 56, 43, .28);
+  --glow-accent-2: 0 0 24px rgba(47, 158, 130, .24);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .5);
+  --shadow-2: 0 6px 20px rgba(0, 0, 0, .55);
+  --shadow-3: 0 16px 44px rgba(0, 0, 0, .6);
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: var(--p-paper-50);
+  --bg-subtle: #EDE4D2;
+  --surface: #FAF5EA;
+  --surface-2: var(--p-paper-100);
+  --border: var(--p-paper-200);
+  --border-strong: #BCA98A;
+
+  --text: #16130F;
+  --text-2: #3D372E;
+  --muted: #6B6355;
+
+  /* на бумаге мелкий текст требует тёмных тонов: киноварь 3.98:1, ярь 2.84:1
+     в среднем тоне не проходят норму 4.5:1 */
+  --accent: var(--p-cinnabar-500);
+  --accent-text: var(--p-cinnabar-700);
+  --accent-2: var(--p-verdigris-700);
+  --accent-2-text: var(--p-verdigris-700);
+  --gold: var(--p-gold-500);
+  --gold-text: var(--p-gold-700);
+  --link: var(--p-ultramarine-500);
+
+  --on-accent: var(--p-paper-50);
+  --on-gold: var(--p-soot-900);
+
+  --focus-ring: var(--p-verdigris-700);
+  --ok: var(--p-verdigris-700);
+  --warn: var(--p-gold-700);
+  --danger: var(--p-cinnabar-700);
+
+  --glow-accent: none;
+  --glow-accent-2: none;
+
+  --shadow-1: 0 1px 2px rgba(22, 19, 15, .07);
+  --shadow-2: 0 6px 18px rgba(22, 19, 15, .09);
+  --shadow-3: 0 16px 40px rgba(22, 19, 15, .13);
+
+  color-scheme: light;
+}
+
+/* --------------------------------------------------------------------------
+   ТИПОГРАФИКА
+   -------------------------------------------------------------------------- */
+:root {
+  --font-display: 'Fedorovsk', 'Old Standard TT', Georgia, 'Times New Roman', serif;
+  --font-module: 'Handjet', 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Golos Text', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --fs-h1: clamp(2rem, 1.25rem + 3.4vw, 3.5rem);
+  --fs-h2: clamp(1.5rem, 1.1rem + 1.8vw, 2.25rem);
+  --fs-h3: clamp(1.125rem, 1rem + 0.6vw, 1.4375rem);
+  --fs-h4: 1.125rem;
+  --fs-lead: clamp(1.0625rem, 1rem + 0.5vw, 1.3125rem);
+  --fs-body: 1.0625rem;
+  --fs-sm: 0.9375rem;
+  --fs-caption: 0.875rem;
+  --fs-mark: 0.8125rem; /* модульные метки */
+
+  --lh-tight: 1.08;
+  --lh-head: 1.18;
+  --lh-snug: 1.4;
+  --lh-body: 1.62;
+
+  --tracking-display: -0.01em;
+  --tracking-mark: 0.14em;
+
+  --measure: 66ch;
+}
+
+/* --------------------------------------------------------------------------
+   ПРОСТРАНСТВО, СЕТКА, ФОРМА
+   Модуль 8px — наследует модульной геометрии знака.
+   -------------------------------------------------------------------------- */
+:root {
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px; --sp-20: 80px; --sp-24: 96px;
+
+  --container: 1120px;
+  --gutter: 32px;
+  --gutter-mobile: 20px;
+  --section-y: 80px;
+  --section-y-mobile: 48px;
+
+  --r-xs: 3px; --r-sm: 5px; --r-md: 8px; --r-lg: 12px; --r-xl: 18px; --r-full: 999px;
+
+  --z-header: 200;
+  --z-modal: 400;
+
+  --dur-fast: 130ms;
+  --dur-base: 220ms;
+  --dur-slow: 340ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* --------------------------------------------------------------------------
+   БАЗА
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: var(--lh-head);
+  letter-spacing: var(--tracking-display);
+  margin: 0;
+  text-wrap: balance;
+}
+h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); }
+h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-h4);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+p { margin: 0 0 var(--sp-4); max-width: var(--measure); }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--text); }
+
+code, kbd, pre, samp { font-family: var(--font-mono); font-size: 0.9em; }
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+img, svg { max-width: 100%; display: block; }
+
+/* модульная метка — единственное место, где пиксельный слой несёт текст */
+.label {
+  font-family: var(--font-module);
+  font-weight: 500;
+  font-size: var(--fs-mark);
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

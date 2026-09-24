@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 7" width="35" height="7" role="img" aria-labelledby="t">
+<title id="t">prokop — модульная надпись, сажа</title>
+<defs>
+  <g id="w"><rect x="-0.47" y="-0.47" width="0.94" height="0.94" rx="0.12"/></g>
+</defs>
+<g fill="#0B0A09">
+  <use href="#w" x="0.5" y="0.5"/><use href="#w" x="1.5" y="0.5"/><use href="#w" x="2.5" y="0.5"/><use href="#w" x="3.5" y="0.5"/>
+  <use href="#w" x="0.5" y="1.5"/><use href="#w" x="4.5" y="1.5"/>
+  <use href="#w" x="0.5" y="2.5"/><use href="#w" x="4.5" y="2.5"/>
+  <use href="#w" x="0.5" y="3.5"/><use href="#w" x="4.5" y="3.5"/>
+  <use href="#w" x="0.5" y="4.5"/><use href="#w" x="1.5" y="4.5"/><use href="#w" x="2.5" y="4.5"/><use href="#w" x="3.5" y="4.5"/>
+  <use href="#w" x="0.5" y="5.5"/>
+  <use href="#w" x="0.5" y="6.5"/>
+  <use href="#w" x="6.5" y="0.5"/><use href="#w" x="8.5" y="0.5"/><use href="#w" x="9.5" y="0.5"/><use href="#w" x="10.5" y="0.5"/>
+  <use href="#w" x="6.5" y="1.5"/><use href="#w" x="7.5" y="1.5"/>
+  <use href="#w" x="6.5" y="2.5"/>
+  <use href="#w" x="6.5" y="3.5"/>
+  <use href="#w" x="6.5" y="4.5"/>
+  <use href="#w" x="13.5" y="0.5"/><use href="#w" x="14.5" y="0.5"/><use href="#w" x="15.5" y="0.5"/>
+  <use href="#w" x="12.5" y="1.5"/><use href="#w" x="16.5" y="1.5"/>
+  <use href="#w" x="12.5" y="2.5"/><use href="#w" x="16.5" y="2.5"/>
+  <use href="#w" x="12.5" y="3.5"/><use href="#w" x="16.5" y="3.5"/>
+  <use href="#w" x="13.5" y="4.5"/><use href="#w" x="14.5" y="4.5"/><use href="#w" x="15.5" y="4.5"/>
+  <use href="#w" x="18.5" y="0.5"/><use href="#w" x="21.5" y="0.5"/>
+  <use href="#w" x="18.5" y="1.5"/><use href="#w" x="20.5" y="1.5"/>
+  <use href="#w" x="18.5" y="2.5"/><use href="#w" x="19.5" y="2.5"/>
+  <use href="#w" x="18.5" y="3.5"/><use href="#w" x="20.5" y="3.5"/>
+  <use href="#w" x="18.5" y="4.5"/><use href="#w" x="21.5" y="4.5"/>
+  <use href="#w" x="25.5" y="0.5"/><use href="#w" x="26.5" y="0.5"/><use href="#w" x="27.5" y="0.5"/>
+  <use href="#w" x="24.5" y="1.5"/><use href="#w" x="28.5" y="1.5"/>
+  <use href="#w" x="24.5" y="2.5"/><use href="#w" x="28.5" y="2.5"/>
+  <use href="#w" x="24.5" y="3.5"/><use href="#w" x="28.5" y="3.5"/>
+  <use href="#w" x="25.5" y="4.5"/><use href="#w" x="26.5" y="4.5"/><use href="#w" x="27.5" y="4.5"/>
+  <use href="#w" x="30.5" y="0.5"/><use href="#w" x="31.5" y="0.5"/><use href="#w" x="32.5" y="0.5"/><use href="#w" x="33.5" y="0.5"/>
+  <use href="#w" x="30.5" y="1.5"/><use href="#w" x="34.5" y="1.5"/>
+  <use href="#w" x="30.5" y="2.5"/><use href="#w" x="34.5" y="2.5"/>
+  <use href="#w" x="30.5" y="3.5"/><use href="#w" x="34.5" y="3.5"/>
+  <use href="#w" x="30.5" y="4.5"/><use href="#w" x="31.5" y="4.5"/><use href="#w" x="32.5" y="4.5"/><use href="#w" x="33.5" y="4.5"/>
+  <use href="#w" x="30.5" y="5.5"/>
+  <use href="#w" x="30.5" y="6.5"/>
+</g>
+</svg>

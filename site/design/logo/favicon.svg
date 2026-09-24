@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" role="img" aria-labelledby="t">
+<title id="t">Прокопий — favicon</title>
+<!-- Favicon: поле киноварью, крест бумагой. Кольцо убрано — на 16px оно сливается,
+     остаётся ядро: модуль 16/9, центр 8,8. -->
+<defs>
+  <g id="f"><rect x="-0.889" y="-0.889" width="1.778" height="1.778" rx="0.3"/></g>
+</defs>
+<rect width="16" height="16" rx="3.2" fill="#D8382B"/>
+<g fill="#F4EDDD">
+  <!-- стойло -->
+  <use href="#f" x="8" y="2.67"/>
+  <use href="#f" x="8" y="4.44"/>
+  <use href="#f" x="8" y="6.22"/>
+  <use href="#f" x="8" y="8"/>
+  <use href="#f" x="8" y="9.78"/>
+  <!-- титло -->
+  <use href="#f" x="6.22" y="4.44"/>
+  <use href="#f" x="9.78" y="4.44"/>
+  <!-- средняя перекладина -->
+  <use href="#f" x="4.44" y="8"/>
+  <use href="#f" x="6.22" y="8"/>
+  <use href="#f" x="9.78" y="8"/>
+  <use href="#f" x="11.56" y="8"/>
+  <!-- косая перекладина -->
+  <rect x="6.25" y="10.32" width="3.5" height="1.4" rx="0.3" transform="rotate(-19.3 8 11.02)"/>
+</g>
+</svg>

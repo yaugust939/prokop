@@ -23,3 +23,8 @@ venv/
 .prokop_dumps/
 .prokop_session.json
 *.out
+
+# === Лендинг prokopii.ru (ветка site) ===
+site/_backup/
+site/node_modules/
+site/.cache/
