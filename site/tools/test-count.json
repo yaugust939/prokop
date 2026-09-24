@@ -1,0 +1,10 @@
+{
+  "count": 537,
+  "method": "прогон pytest",
+  "command": "cd src && python -m pytest tests -q",
+  "result": "537 passed in 5.45s",
+  "date": "2026-09-24",
+  "ref": "a21644a2581daf91d9c2c1c89c5796270c183121",
+  "environment": "Python 3.11.2, pytest 9.1.1, изолированный venv на сервере сборки",
+  "note": "Ветка site и её родитель bb8998d индекса тестов не меняют: каталог src/tests приходит из a21644a без изменений."
+}

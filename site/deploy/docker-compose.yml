@@ -1,0 +1,22 @@
+# prokopii.ru — лендинг prokop.
+# Разворачивает локальная сторона: docker compose -f docker-compose.yml up -d --build
+# Отладочный порт — строго 127.0.0.1:8094 (8093 занят артелью, 8095 и 8096 тоже заняты).
+
+services:
+  prokopii-site:
+    build:
+      context: .
+      args:
+        # Ревизия выкатки: ветка или тег ветки site.
+        SITE_REF: site
+    image: prokopii-site:latest
+    container_name: prokopii-site
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8094:80"
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true

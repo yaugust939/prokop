@@ -1,0 +1,37 @@
+# prokopii.ru — роут Traefik для лендинга prokop.
+# Свой файл: neuro-artel.yml не трогается. Бэкенд — по имени контейнера:
+# 127.0.0.1 давал 502, потому что контейнер отвечает в сети traefik-net.
+
+http:
+  routers:
+    prokopii-web:
+      rule: Host(`prokopii.ru`)
+      entryPoints:
+        - web
+      service: prokopii-site
+      middlewares:
+        - prokopii-https
+
+    prokopii-websecure:
+      rule: Host(`prokopii.ru`)
+      entryPoints:
+        - websecure
+      service: prokopii-site
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    prokopii-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  services:
+    prokopii-site:
+      loadBalancer:
+        servers:
+          - url: http://prokopii-site:80
+        healthCheck:
+          path: /healthz
+          interval: 30s
+          timeout: 5s
