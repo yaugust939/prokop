@@ -23,5 +23,9 @@ COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /src/site/dist/ /usr/share/nginx/html/
 EXPOSE 80
+LABEL org.opencontainers.image.title="prokop — лендинг prokopii.ru" \
+      org.opencontainers.image.description="Статический лендинг ядра агента prokop (Python, MIT)" \
+      org.opencontainers.image.source="https://github.com/yaugust939/prokop" \
+      org.opencontainers.image.licenses="MIT"
 HEALTHCHECK CMD wget -q -O /dev/null http://127.0.0.1/healthz || exit 1
 CMD ["nginx", "-g", "daemon off;"]
