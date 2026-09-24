@@ -81,7 +81,7 @@ function rewrite(text, depth) {
  *   2. живой прогон pytest, если python и pytest доступны и рядом есть src/tests;
  *   3. tools/test-count.json — запись реального прогона с указанием способа.
  */
-function resolveTestCount() {
+async function resolveTestCount() {
   const fromEnv = process.env.PROKOP_TESTS;
   if (fromEnv && /^\d+$/.test(fromEnv.trim())) {
     return { count: Number(fromEnv.trim()), source: 'переменная окружения PROKOP_TESTS' };
@@ -108,7 +108,7 @@ function resolveTestCount() {
   }
 
   if (existsSync(TESTS_FILE)) {
-    const saved = JSON.parse(readFile(TESTS_FILE, 'utf8'));
+    const saved = JSON.parse(await readFile(TESTS_FILE, 'utf8'));
     notes.push(`источник числа тестов: ${saved.method}, ${saved.date}, коммит ${saved.ref}`);
     return { count: saved.count, source: `tools/test-count.json (${saved.method})` };
   }
@@ -210,7 +210,7 @@ ${urls}
 }
 
 async function main() {
-  const tests = resolveTestCount();
+  const tests = await resolveTestCount();
 
   await rm(DIST_DIR, { recursive: true, force: true });
   await mkdir(DIST_DIR, { recursive: true });
