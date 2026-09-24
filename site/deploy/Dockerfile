@@ -18,6 +18,8 @@ RUN node tools/build-dist.mjs
 
 FROM nginx:1.27-alpine
 RUN apk add --no-cache tzdata && cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+# Сниппет заголовков безопасности: подключается в каждом location со своим Cache-Control.
+COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /src/site/dist/ /usr/share/nginx/html/
 EXPOSE 80
