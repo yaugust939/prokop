@@ -12,7 +12,9 @@ services:
       args:
         SITE_REF: site
         # Без переменной сборка остановится с объяснением — это намеренно.
-        SITE_REV: ${SITE_REV:?не задан SITE_REV: см. комментарий выше}
+        # Кавычки обязательны: двоеточие внутри ${VAR:?текст} YAML читает как
+        # новое отображение и падает на разборе файла.
+        SITE_REV: "${SITE_REV:?не задан SITE_REV — см. комментарий выше}"
     image: prokopii-site:latest
     container_name: prokopii-site
     restart: unless-stopped
