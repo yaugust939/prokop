@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prokop — ядро агента, который делает работу</title>
+<meta name="description" content="Открытое ядро агента на Python под лицензией MIT: цикл хода, инструменты, память между сессиями, хранилище сессий, провайдеры, планировщик, субагенты, терминальные бэкенды. Смена модели — настройкой, без правки кода.">
+<link rel="icon" type="image/svg+xml" href="../design/logo/favicon.svg">
+<link rel="canonical" href="https://prokopii.ru/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://prokopii.ru/">
+<meta property="og:title" content="prokop — ядро агента, который делает работу">
+<meta property="og:description" content="Открытое ядро агента на Python под лицензией MIT: цикл хода, инструменты, память, провайдеры, планировщик, субагенты, терминальные бэкенды. Смена модели — настройкой.">
+<meta property="og:site_name" content="prokop">
+<meta property="og:locale" content="ru_RU">
+<link rel="stylesheet" href="../design/tokens.css">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="container head-inner">
+    <a class="brand" href="#top" aria-label="prokop — к началу страницы">
+      <img src="../design/logo/lockup-accent.svg" alt="prokop" width="123" height="32">
+    </a>
+    <nav class="head-nav" aria-label="Разделы страницы">
+      <a href="#core">Ядро</a>
+      <a href="#skills">Навыки</a>
+      <a href="#community">Сообщество</a>
+    </nav>
+    <a class="btn btn-secondary head-cta" href="https://github.com/yaugust939/prokop" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="section hero" id="top">
+    <div class="container hero-inner">
+      <p class="label hero-label">Ядро агента · Python · MIT</p>
+      <h1>Ядро агента, который делает работу</h1>
+      <p class="lead"><span class="dropcap">Б</span>ольшинство «агентов» — обёртка над чатом. <code>prokop</code> — это ядро агента, который работает: вызывает инструменты, помнит контекст между сессиями, планирует отложенные задачи, делегирует подзадачи и исполняет команды. Модель — любая: провайдер меняется настройкой, без правки кода.</p>
+
+      <div class="install">
+        <div class="install-head">
+          <span class="label">Установка</span>
+          <button class="btn btn-secondary btn-copy" type="button" data-copy="install-code">Копировать</button>
+        </div>
+        <pre id="install-code"><code>git clone https://github.com/yaugust939/prokop
+cd prokop && pip install -e src</code></pre>
+      </div>
+
+      <ul class="facts">
+        <li><span class="fact-num">{{TESTS}}</span> <span class="label">тестов</span></li>
+        <li><span class="fact-num">MIT</span></li>
+        <li><span class="fact-num">Python 3.11+</span></li>
+      </ul>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="https://github.com/yaugust939/prokop" target="_blank" rel="noopener">Открыть на GitHub</a>
+        <a class="btn btn-secondary" href="#core">Что внутри</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--subtle" id="core">
+    <div class="container">
+      <h2>Ядро и обвес, а не конструктор</h2>
+
+      <table class="core-table">
+        <caption class="visually-hidden">Модули ядра prokop и их назначение</caption>
+        <thead>
+          <tr><th scope="col">Часть</th><th scope="col">Что делает</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row"><code>loop</code></th><td>Цикл хода: пролог → модель и инструменты → финализация. Стриминг, ретраи, бюджеты, рулевое управление.</td></tr>
+          <tr><th scope="row"><code>tools</code></th><td>Декларативный реестр инструментов, наборы, разрешения, блок-лист, прогрессивное раскрытие.</td></tr>
+          <tr><th scope="row"><code>skills</code></th><td>Процедурная память: индекс в промпте, жизненный цикл; телеметрия использования — в работе.</td></tr>
+          <tr><th scope="row"><code>memory</code></th><td>Память между сессиями.</td></tr>
+          <tr><th scope="row"><code>store</code></th><td>Хранилище сессий: SQLite и полнотекстовый поиск.</td></tr>
+          <tr><th scope="row"><code>providers</code></th><td>Слой модельных провайдеров: смена модели без правки кода.</td></tr>
+          <tr><th scope="row"><code>transport</code></th><td>Транспорты, включая адаптеры Telegram и MAX.</td></tr>
+        </tbody>
+      </table>
+
+      <p class="wiring"><span class="label">Обвес</span> <code>cron</code> (отложенные и периодические задания с доставкой) · <code>subagents</code> (делегирование с изоляцией и бюджетами) · <code>backends</code> (терминальные бэкенды: снимок окружения, обрезка вывода) · <code>gateway</code>.</p>
+
+      <p class="tagline">Каждая часть — отдельный модуль. Ставить целиком не обязательно.</p>
+    </div>
+  </section>
+
+  <section class="section" id="cli">
+    <div class="container">
+      <h2>Командная строка, а не только чат</h2>
+
+      <div class="terms">
+        <div class="term">
+          <pre><span class="term-prompt">$</span> prokop --help
+<span class="term-out">usage: prokop [-h] [--version] [--json] &lt;команда&gt; ...
+
+prokop — универсальное ядро агента: ход, сессии, планировщик, навыки.
+
+positional arguments:
+  &lt;команда&gt;
+    doctor     проверить окружение профиля
+    config     конфигурация профиля
+    sessions   сессии профиля
+    skills     навыки профиля
+    providers  провайдеры моделей
+    cron       планировщик
+    mcp        внешние MCP-серверы
+    memory     постоянная память профиля
+    security   политики безопасности
+    checkpoints
+               снимки состояния и откат
+    turn       один ход агента
+    chat       интерактивный цикл ходов
+    tui        терминальный интерфейс (extra tui)
+
+options:
+  -h, --help   show this help message and exit
+  --version    show program's version number and exit
+  --json       машиночитаемый вывод (JSON)</span></pre>
+        </div>
+
+        <div class="term">
+          <pre><span class="term-prompt">$</span> prokop doctor
+<span class="term-out">OK профиль: ~/.prokop/default
+OK запись в профиль: ~/.prokop/default
+OK конфигурация: ~/.prokop/default/config.yaml (нет — значения по умолчанию)
+OK модель: — / —
+OK провайдеры: anthropic-messages, deepseek, ollama, openai-compatible, openrouter
+-- ключ модели: не задан (ожидается OPENAI_API_KEY, ANTHROPIC_API_KEY, OPENROUTER_API_KEY, DEEPSEEK_API_KEY)
+OK python: 3.11.2
+-- бинарь opencode: нет (оркестратор)
+-- бинарь cua-driver: нет (GUI-автоматизация)</span></pre>
+        </div>
+
+        <div class="term">
+          <pre><span class="term-prompt">$</span> prokop providers list
+<span class="term-out">anthropic-messages  [anthropic_messages]  ключ: ANTHROPIC_API_KEY
+deepseek  [chat_completions]  ключ: DEEPSEEK_API_KEY
+ollama  [chat_completions]  ключ: —
+openai-compatible  [chat_completions]  ключ: OPENAI_API_KEY
+openrouter  [chat_completions]  ключ: OPENROUTER_API_KEY</span></pre>
+        </div>
+
+        <div class="term">
+          <pre><span class="term-prompt">$</span> prokop turn "сколько файлов в текущем каталоге?"
+<span class="term-err">ошибка: нет ключа модели: задайте DEEPSEEK_API_KEY</span><span class="caret" aria-hidden="true"></span></pre>
+          <p class="term-note">Живой ход требует ключа провайдера. Это ответ ядра без ключа, снятый как есть.</p>
+        </div>
+      </div>
+
+      <p class="note">Вывод снят с ядра на коммите <code>a21644a</code>; домашний каталог в выводе сокращён до <code>~</code>. Ничего не досочинено.</p>
+    </div>
+  </section>
+
+  <section class="section section--subtle" id="skills">
+    <div class="container">
+      <h2>Агент, который ведёт свои навыки сам</h2>
+      <p><code>skills</code> — это процедурная память. Агент создаёт и правит навыки по итогам работы, ведёт телеметрию использования, журнал изменений с поштучным откатом, и переводит устаревшее в архив вместо удаления. Навыки не свалка: у каждого есть срок жизни и след использования.</p>
+
+      <div class="status">
+        <p class="label label--warn">Статус: часть в работе</p>
+        <p>В этой сборке (коммит <code>a21644a</code>) в ядре есть индекс навыков в промпте, прогрессивное раскрытие, жизненный цикл и архив вместо удаления — каталог <code>skills/</code>. Телеметрия использования и журнал изменений с поштучным откатом в сборку не входят: они в работе. Пометка стоит здесь именно поэтому.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="models">
+    <div class="container">
+      <h2>Любая модель. Смена — настройкой</h2>
+      <ul class="list">
+        <li>Провайдер задаётся профилем: режим API, базовый URL, переменные ключа. Код не меняется.</li>
+        <li>Локальный инференс: тот же профиль с другим <code>base_url</code>, включается на площадке заказчика.</li>
+        <li>Российские модели: работа по YandexGPT и GigaChat ведётся. <span class="chip">План</span> В этой сборке их нет.</li>
+      </ul>
+      <p class="tagline">Не привязан к вендору. Не требует внешних API для работы ядра.</p>
+    </div>
+  </section>
+
+  <section class="section section--subtle" id="community">
+    <div class="container">
+      <h2>Библиотека навыков — отдельно от ядра</h2>
+      <p>Навык в ядре — это каталог с <code>SKILL.md</code>: метаданные, связанные файлы, свой срок жизни. Навыки живут в профиле, ядро остаётся ядром — перечислить их можно командой <code>prokop skills list</code>.</p>
+
+      <div class="status">
+        <p class="label label--warn">Статус: каталог не опубликован</p>
+        <p>Публичной библиотеки <code>prokop-skills</code> и индекса хаба в этой сборке нет: обещать каталог, которого нет, нельзя. Команд установки, поиска и аудита навыков в CLI тоже нет — есть <code>prokop skills list</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="audience">
+    <div class="container">
+      <h2>Три входа</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Разработчику агентов</h3>
+          <p>Не пиши цикл, инструменты и память с нуля — собери на готовом ядре. Начни с <code>loop</code> и <code>tools</code>.</p>
+        </article>
+        <article class="card">
+          <h3>Инженеру автоматизации</h3>
+          <p>Планировщик, субагенты, терминальные бэкенды. Агент, который сам планирует и выполняет.</p>
+        </article>
+        <article class="card">
+          <h3>Ценителю открытости</h3>
+          <p>MIT, свой хостинг, любая модель, ноль скрытых ограничений.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--subtle" id="faq">
+    <div class="container">
+      <h2>Вопросы</h2>
+      <div class="faq">
+        <details>
+          <summary>Что такое prokop?</summary>
+          <div class="faq-body">
+            <p>Открытое универсальное ядро для построения автономных агентов: цикл исполнения, инструменты, память, планировщик, делегирование и исполнение команд. Поставляется как Python-пакет и Docker-образ.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Чем отличается от других агентных фреймворков?</summary>
+          <div class="faq-body">
+            <p>Даёт ядро <strong>и обвес</strong> сразу (цикл, инструменты, память, планировщик, субагенты, бэкенды, гейтвей), не привязан к модели (провайдер меняется настройкой), проверен {{TESTS}} тестами и чистой установкой в контейнере, открыт под MIT.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Это бесплатно? Какая лицензия?</summary>
+          <div class="faq-body">
+            <p>Да, открытый код под лицензией <strong>MIT</strong> — используйте, меняйте, включайте в свои проекты.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Нужен ли API-ключ?</summary>
+          <div class="faq-body">
+            <p>Для живых ходов — да, ключ модельного провайдера (по умолчанию <code>deepseek</code>). Задайте <code>DEEPSEEK_API_KEY</code>. Без ключа работают тесты и сухая установка.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Какие модели поддерживаются?</summary>
+          <div class="faq-body">
+            <p>Любые через слой провайдеров. Встроенные профили: <code>openai-compatible</code>, <code>anthropic-messages</code>, <code>openrouter</code>, <code>deepseek</code>, <code>ollama</code>. Профиль провайдера задаёт режим API, базовый URL и переменные ключа; имя модели задаётся конфигурацией профиля.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Можно ли подключить локальную модель (например, Ollama)?</summary>
+          <div class="faq-body">
+            <p>Архитектура провайдеров это позволяет (встроенный профиль <code>ollama</code>); укажите <code>base_url</code> локального сервера и модель.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Где хранятся данные (сессии, задания)?</summary>
+          <div class="faq-body">
+            <p>В домашнем каталоге профиля — по умолчанию <code>~/.prokop</code> (переопределяется <code>PROKOP_HOME</code>).</p>
+          </div>
+        </details>
+        <details>
+          <summary>Есть ли защита от опасных команд?</summary>
+          <div class="faq-body">
+            <p>Да: у инструментов есть разрешения и <strong>жёсткий блок-лист</strong> опасных команд (рекурсивное удаление корня, <code>mkfs</code>, <code>dd</code> на блочные устройства, fork-бомба и т.п.), не выполняемых даже в «свободном» режиме.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Как прогнать тесты?</summary>
+          <div class="faq-body">
+            <pre class="faq-code"><code>cd src && python -m pytest tests -q</code></pre>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="artel">
+    <div class="container">
+      <div class="artel">
+        <p class="label">Второй вход</p>
+        <h3>Прокопий в Нейро-артели</h3>
+        <p>Прокопий — тот же агент, собранный для Нейро-артели: навигация по наставникам, задачам и материалам, с переходом в MAX.</p>
+        <p><a class="btn btn-secondary" href="https://aiartel.ru" target="_blank" rel="noopener">aiartel.ru</a></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="container foot-inner">
+    <img class="foot-logo" src="../design/logo/lockup-paper.svg" alt="prokop" width="120" height="31">
+    <p class="foot-meta"><span class="label">MIT</span> · <a href="https://github.com/yaugust939/prokop" target="_blank" rel="noopener">github.com/yaugust939/prokop</a> · 2026</p>
+    <div class="foot-sign">
+      <p><strong>О знаке:</strong> кольцо обвеса вокруг ядра; косая перекладина — та, что делает крест осмиконечным.</p>
+      <p>Прокопий — имя. <code>prokop</code> — имя ядра.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/app.js" defer></script>
+</body>
+</html>

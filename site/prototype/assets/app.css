@@ -1,0 +1,578 @@
+/* ==========================================================================
+   PROKOP — лендинг. Слой компонентов поверх design/tokens.css.
+   Только семантические роли из tokens.css: сырых hex и внешних адресов нет.
+   Тёмная тема по умолчанию, светлая — по data-theme="light".
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   РАСКЛАДКА
+   -------------------------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section { padding-block: var(--section-y); }
+.section--subtle { background: var(--bg-subtle); }
+
+section[id] { scroll-margin-top: var(--sp-16); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   ШАПКА
+   -------------------------------------------------------------------------- */
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.head-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: 64px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  flex: none;
+}
+.brand img { width: 123px; height: 32px; }
+
+.head-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-inline-start: auto;
+}
+
+.head-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--sp-3);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.head-nav a:hover { background: var(--surface-2); color: var(--text); }
+.head-nav a:active { background: var(--surface-2); color: var(--accent-text); }
+
+.head-cta { flex: none; margin-inline-start: var(--sp-2); }
+
+/* --------------------------------------------------------------------------
+   КНОПКИ. Состояния: default · hover · focus-visible · active · disabled.
+   focus-visible приходит из tokens.css — не дублируется.
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: var(--lh-snug);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
+}
+
+/* Заливка берётся из --accent-fill (киноварь 700), а не из --accent (500):
+   бумага на 500 даёт 3.98:1, сажа на 500 — 4.26:1, обе ниже нормы 4.5:1.
+   Кайма --accent-edge держит границу там, где заливка 700 близка к фону. */
+.btn-primary {
+  background: var(--accent-fill);
+  border-color: var(--accent-edge);
+  color: var(--on-accent);
+}
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent-fill) 88%, var(--bg));
+  border-color: var(--text);
+}
+.btn-primary:active {
+  background: color-mix(in srgb, var(--accent-fill) 78%, var(--bg));
+  border-color: var(--text);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.btn-secondary:hover { background: var(--surface-2); border-color: var(--text); }
+.btn-secondary:active { background: var(--surface); }
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.btn-copy { padding-inline: var(--sp-4); }
+
+/* --------------------------------------------------------------------------
+   HERO. Скан-линии — фоном, шаг 3px, прозрачность 4%.
+   -------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--text) 4%, transparent) 0 1px,
+    transparent 1px 3px
+  );
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--sp-6);
+  justify-items: start;
+}
+
+.hero-label { margin: 0; }
+
+h1 { max-width: 22ch; }
+
+.lead {
+  font-size: var(--fs-lead);
+  line-height: var(--lh-snug);
+  color: var(--text-2);
+  max-width: 62ch;
+}
+
+.dropcap {
+  float: inline-start;
+  font-family: var(--font-display);
+  font-size: 3.1em;
+  line-height: 0.78;
+  color: var(--accent-text);
+  margin-inline-end: var(--sp-2);
+}
+
+/* Строка кода внутри текста */
+:where(p, li, td, summary) code {
+  padding: 0.1em 0.35em;
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   БЛОК УСТАНОВКИ
+   -------------------------------------------------------------------------- */
+.install {
+  width: min(100%, 46rem);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.install-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.install pre {
+  margin: 0;
+  padding: var(--sp-5);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+/* --------------------------------------------------------------------------
+   ФАКТЫ
+   -------------------------------------------------------------------------- */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.facts li { display: flex; align-items: baseline; gap: var(--sp-2); }
+
+.fact-num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--fs-lead);
+  color: var(--text);
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+
+/* --------------------------------------------------------------------------
+   ТАБЛИЦА «ЯДРО И ОБВЕС»
+   -------------------------------------------------------------------------- */
+h2 { margin-bottom: var(--sp-6); }
+
+.core-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+
+.core-table th,
+.core-table td {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.core-table thead th {
+  font-family: var(--font-module);
+  font-size: var(--fs-mark);
+  font-weight: 500;
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom-color: var(--border-strong);
+}
+
+.core-table tbody th {
+  width: 12rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--accent-2-text);
+}
+
+.core-table td { color: var(--text-2); }
+
+.wiring {
+  margin-top: var(--sp-6);
+  color: var(--text-2);
+}
+.wiring .label { color: var(--muted); }
+
+.tagline {
+  margin-top: var(--sp-6);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   ТЕРМИНАЛ. Свечение — только каретка.
+   -------------------------------------------------------------------------- */
+.terms {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.term {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.term pre {
+  margin: 0;
+  padding: var(--sp-5);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.term-prompt { color: var(--accent-2-text); font-weight: 700; }
+.term-out { color: var(--text-2); }
+.term-err { color: var(--danger); }
+
+.term-note {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-5) var(--sp-4);
+  border-top: 1px dashed var(--border);
+  color: var(--text-2);
+  font-size: var(--fs-caption);
+}
+
+.caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-inline-start: 0.15em;
+  vertical-align: text-bottom;
+  background: var(--accent-2-text);
+  box-shadow: var(--glow-accent-2);
+}
+
+.note {
+  margin-top: var(--sp-6);
+  color: var(--muted);
+  font-size: var(--fs-caption);
+}
+
+/* --------------------------------------------------------------------------
+   СТАТУС-ПОМЕТКИ
+   -------------------------------------------------------------------------- */
+.status {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-6);
+  padding: var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.status p { max-width: 68ch; color: var(--text-2); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-full);
+  font-family: var(--font-module);
+  font-size: var(--fs-mark);
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--warn);
+  background: var(--surface);
+}
+
+.label--warn { color: var(--warn); }
+
+/* --------------------------------------------------------------------------
+   СПИСКИ И КАРТОЧКИ
+   -------------------------------------------------------------------------- */
+.list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: 68ch;
+}
+.list li {
+  padding-inline-start: var(--sp-6);
+  position: relative;
+  color: var(--text-2);
+}
+.list li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0.6em;
+  width: var(--sp-3);
+  height: var(--sp-1);
+  background: var(--accent-2-text);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-6);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-6);
+}
+.card h3 { margin-bottom: var(--sp-3); }
+.card p { color: var(--text-2); }
+
+/* --------------------------------------------------------------------------
+   FAQ
+   -------------------------------------------------------------------------- */
+.faq {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 68ch;
+}
+
+.faq details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.faq summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 44px;
+  padding: var(--sp-4) var(--sp-5);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  margin-inline-start: auto;
+  font-family: var(--font-module);
+  font-size: var(--fs-mark);
+  color: var(--muted);
+}
+.faq details[open] summary::after { content: "−"; }
+.faq summary:hover { background: var(--surface-2); color: var(--accent-text); }
+.faq summary:active { background: var(--surface-2); color: var(--text); }
+
+.faq-body { padding: 0 var(--sp-5) var(--sp-5); }
+.faq-body p { color: var(--text-2); }
+
+.faq-code {
+  margin: 0;
+  padding: var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   АРТЕЛЬ И ФУТЕР
+   -------------------------------------------------------------------------- */
+.artel {
+  display: grid;
+  gap: var(--sp-3);
+  justify-items: start;
+  padding: var(--sp-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.artel p { color: var(--text-2); }
+
+.site-foot {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-block: var(--sp-10);
+}
+
+.foot-inner {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.foot-logo { width: 120px; height: 31px; }
+
+.foot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  color: var(--muted);
+}
+.foot-meta a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--link);
+}
+
+.foot-sign { display: grid; gap: var(--sp-2); }
+.foot-sign p { color: var(--text-2); max-width: 66ch; }
+.foot-sign strong { color: var(--text); }
+
+/* --------------------------------------------------------------------------
+   СВЕТЛАЯ ТЕМА: локап на бумаге — версия «сажа».
+   -------------------------------------------------------------------------- */
+[data-theme="light"] .brand img { content: url("../design/logo/lockup-soot.svg"); }
+[data-theme="light"] .foot-logo { content: url("../design/logo/lockup-soot.svg"); }
+
+/* --------------------------------------------------------------------------
+   ПЕРЕЛОМЫ 960px и 640px
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .container { padding-inline: var(--gutter-mobile); }
+  .section { padding-block: var(--section-y-mobile); }
+
+  .head-inner { flex-wrap: wrap; gap: var(--sp-2); padding-block: var(--sp-2); }
+  .head-nav { order: 3; width: 100%; margin-inline-start: 0; }
+  .head-cta { margin-inline-start: auto; }
+
+  h1 { max-width: none; }
+
+  .cards { grid-template-columns: minmax(0, 1fr); }
+
+  /* Таблица ядра становится стопкой карточек: горизонтального скролла нет. */
+  .core-table, .core-table thead, .core-table tbody,
+  .core-table tr, .core-table th, .core-table td { display: block; }
+
+  .core-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .core-table tr {
+    padding: var(--sp-4);
+    margin-bottom: var(--sp-3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+  }
+  .core-table th, .core-table td { padding: 0; border: 0; }
+  .core-table tbody th { width: auto; margin-bottom: var(--sp-2); }
+
+  .install-head { flex-wrap: wrap; }
+}
