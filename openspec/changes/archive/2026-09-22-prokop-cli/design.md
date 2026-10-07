@@ -9,7 +9,7 @@
 Чего нет — **точки входа**. Сегодня ядро запускается двумя способами: из
 Python-кода или как MCP-сервер для opencode (`~/.config/opencode/mcp-servers/prokop_mcp.py`,
 вне репозитория). Самостоятельно из терминала `prokop` не запускается: в
-`pyproject.toml` нет `[project.scripts]`. У аналога  есть CLI и
+`pyproject.toml` нет `[project.scripts]`. У аналога есть CLI и
 TUI — это гэп P1 в `docs/PARITY.md`.
 
 Ограничения:
