@@ -23,3 +23,6 @@ venv/
 .prokop_dumps/
 .prokop_session.json
 *.out
+
+# === Локальные трекеры и состояние профиля (не публикуются) ===
+.prokop/
